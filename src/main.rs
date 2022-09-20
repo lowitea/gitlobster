@@ -1,6 +1,6 @@
 mod cli;
-mod git;
 mod cloner;
 mod gitlab;
+mod git;
 
 fn main() -> Result<(), String> { cli::run() }
