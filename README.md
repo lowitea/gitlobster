@@ -33,3 +33,6 @@ gitlobster -t token -u url DESTINATION_DIR
 - [ ] Save not only the directory tree but also repository settings
 - [ ] Add cloning by http
 - [ ] Add include/exclude patterns
+- [ ] Add config from file
+- [ ] Add debug option
+- [ ] Add tests
