@@ -12,7 +12,7 @@ Inspired by [gitlabber](https://github.com/ezbz/gitlabber).
 - Clone new repositories that have appeared
 - Push the cloned repositories to a new GitLab instance, keeping the directory tree
 
-## Install (TDB)
+## Install (TBD)
 
 [//]: # (TODO: Write a complete installation guide)
 
