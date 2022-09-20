@@ -10,7 +10,7 @@ Inspired by [gitlabber](https://github.com/ezbz/gitlabber).
 - Clone all branches
 - Update all cloned repositories
 - Clone new repositories that have appeared
-- Push the cloned repositories to a new GitLab instance, keeping the directory tree
+- (TBD) Push the cloned repositories to a new GitLab instance, keeping the directory tree
 
 ## Install (TBD)
 
