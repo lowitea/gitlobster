@@ -94,8 +94,6 @@ fn update(path: &String) -> Result<(), String> {
 }
 
 pub fn fetch(src: String, dst: String) -> Result<(), String> {
-    check_status(&"/home/lowit/_opsos/actix-web".to_string())
-        .unwrap_or(clone(&src, &dst)?);
-
+    check_status(&dst).unwrap_or(clone(&src, &dst)?);
     update(&dst)
 }
