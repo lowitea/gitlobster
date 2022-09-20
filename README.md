@@ -36,3 +36,4 @@ gitlobster -t token -u url DESTINATION_DIR
 - [ ] Add config from file
 - [ ] Add debug option
 - [ ] Add tests
+- [ ] Add parallel cloning
