@@ -37,3 +37,4 @@ gitlobster -t token -u url DESTINATION_DIR
 - [ ] Add debug option
 - [ ] Add tests
 - [ ] Add parallel cloning
+- [ ] Add show option for only show repositories list
