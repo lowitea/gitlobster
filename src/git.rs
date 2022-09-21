@@ -93,7 +93,47 @@ fn update(path: &String) -> Result<(), String> {
     Ok(())
 }
 
+fn add_remote_backup(path: &String, remote: String) {
+    let _ = Command::new("git")
+        .arg("-C")
+        .arg(path)
+        .arg("remote")
+        .arg("add")
+        .arg("backup")
+        .arg(remote)
+        .output();
+}
+
+fn push_all_remote_backup(path: String) -> Result<(), String> {
+    Command::new("git")
+        .arg("-C")
+        .arg(&path)
+        .arg("push")
+        .arg("-u")
+        .arg("backup")
+        .arg("--all")
+        .output()
+        .map(|_| ())
+        .map_err(|e| e.to_string())?;
+
+    Command::new("git")
+        .arg("-C")
+        .arg(&path)
+        .arg("push")
+        .arg("-u")
+        .arg("backup")
+        .arg("--tags")
+        .output()
+        .map(|_| ())
+        .map_err(|e| e.to_string())
+}
+
 pub fn fetch(src: String, dst: String) -> Result<(), String> {
     check_status(&dst).unwrap_or(clone(&src, &dst)?);
     update(&dst)
+}
+
+pub fn push_backup(path: String, remote: String) -> Result<(), String> {
+    add_remote_backup(&path, remote);
+    push_all_remote_backup(path)
 }
