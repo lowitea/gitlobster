@@ -35,11 +35,11 @@ pub fn run() -> Result<(), String> {
     let cli = Cli::parse();
     let fetch_gl = FetchGitlabOptions::new(cli.fu, cli.ft)?;
 
-    let backup_gl = if let (
-        Some(url), Some(token), Some(group)
-    ) = (cli.bu, cli.bt, cli.bg) {
+    let backup_gl = if let (Some(url), Some(token), Some(group)) = (cli.bu, cli.bt, cli.bg) {
         Some(BackupGitlabOptions::new(url, token, group)?)
-    } else { None };
+    } else {
+        None
+    };
 
     clone(fetch_gl, cli.dst, backup_gl)
 }
