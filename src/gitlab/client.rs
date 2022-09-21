@@ -13,10 +13,9 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(token: String, url: String) -> Result<Self, String> {
+    pub fn new(token: String, mut url: Url) -> Result<Self, String> {
         let http = rqw::Client::new();
 
-        let mut url = Url::parse(&url).map_err(|e| e.to_string())?;
         let query = format!("access_token={}&per_page={}", token, OBJECTS_PER_PAGE);
         url.set_path(&format!("api/{}", API_VERSION));
         url.set_query(Some(&query));

@@ -1,10 +1,41 @@
 use std::fs;
 
+use url::Url;
+
 use crate::{git, gitlab};
 
-pub fn clone(token: String, url: String, dst: String) -> Result<(), String> {
-    let gl = gitlab::Client::new(token, url)?;
-    let projects = gl.get_projects().unwrap();
+pub struct FetchGitlabOptions {
+    url: Url,
+    token: String,
+}
+
+impl FetchGitlabOptions {
+    pub fn new(url: String, token: String) -> Result<Self, String> {
+        let url = Url::parse(&url).map_err(|e| e.to_string())?;
+        Ok(Self { url, token })
+    }
+}
+
+pub struct BackupGitlabOptions {
+    url: Url,
+    token: String,
+    group: String,
+}
+
+impl BackupGitlabOptions {
+    pub fn new(url: String, token: String, group: String) -> Result<Self, String> {
+        let url = Url::parse(&url).map_err(|e| e.to_string())?;
+        Ok(Self { url, token, group })
+    }
+}
+
+pub fn clone(
+    fetch: FetchGitlabOptions,
+    dst: String,
+    backup: Option<BackupGitlabOptions>,
+) -> Result<(), String> {
+    let fetch_gl = gitlab::Client::new(fetch.token, fetch.url)?;
+    let projects = fetch_gl.get_projects().unwrap();
 
     // TODO: add progress bar
     for p in projects {
