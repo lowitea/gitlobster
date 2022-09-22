@@ -8,6 +8,9 @@
    width="987.03064"
    height="152.03943"
    inkscape:version="1.2.1 (9c6d41e410, 2022-07-14)"
+   inkscape:export-filename="logo.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -22,7 +25,7 @@
      inkscape:deskcolor="#505050"
      showgrid="false"
      inkscape:zoom="1.1426294"
-     inkscape:cx="469.53105"
+     inkscape:cx="409.14402"
      inkscape:cy="32.381451"
      inkscape:window-width="1920"
      inkscape:window-height="1009"
@@ -60,11 +63,11 @@
          sodipodi:nodetypes="cssccssccc" /></g><text
        xml:space="preserve"
        id="text330"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:46.3782px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto Bold';white-space:pre;shape-inside:url(#rect332);fill:#171321;fill-opacity:1;stroke:none"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:46.3782px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto Bold';white-space:pre;shape-inside:url(#rect332);display:inline;fill:#171321;fill-opacity:1;stroke:none"
        transform="matrix(3.4337399,0,0,3.800673,-676.15658,-900.36062)"><tspan
          x="387.73242"
          y="304.35665"
-         id="tspan4054">o</tspan></text><path
+         id="tspan6621">o</tspan></text><path
        class="cls-1"
        d="m 428.92,171.51 h 22.78 c -3.8,-24.22 -24.77,-41.09 -52.06,-41.09 -32.29,0 -56.52,23.74 -56.52,63.5 0,39.05 23.14,63.27 57.18,63.27 30.55,0 52.42,-19.65 52.42,-51.46 v -14.82 h -50.07 v 17.47 h 28.44 c -0.36,17.6 -12.11,28.74 -30.67,28.74 -20.66,0 -34.82,-15.48 -34.82,-43.44 0,-27.78 14.4,-43.2 34.34,-43.2 14.88,0 25.06,7.95 28.98,21.03 z"
        id="path95" /><path
@@ -82,10 +85,10 @@
        id="path105" /><text
        xml:space="preserve"
        id="text1935"
-       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1937);fill:#171321;fill-opacity:1;stroke:none"
+       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;white-space:pre;shape-inside:url(#rect1937);display:inline;fill:#171321;fill-opacity:1;stroke:none"
        transform="matrix(4.0208336,0,0,4.365012,-2365.329,-574.86486)"><tspan
          x="799.66992"
          y="190.24957"
-         id="tspan4058"><tspan
+         id="tspan6625"><tspan
            style="font-weight:bold;font-family:Roboto;-inkscape-font-specification:'Roboto Bold'"
-           id="tspan4056">ster</tspan></tspan></text></g></svg>
+           id="tspan6623">ster</tspan></tspan></text></g></svg>
