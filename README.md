@@ -9,7 +9,7 @@ Inspired by [gitlabber](https://github.com/ezbz/gitlabber).
 <br>
 
 <p align="center">
-    <img src=" https://github.com/lowitea/gitlobster/raw/master/logo.png">
+    <img src="https://github.com/lowitea/gitlobster/raw/master/logo.png">
 </p>
 
 ## Features
