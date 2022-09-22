@@ -5,7 +5,7 @@ use url::Url;
 
 use crate::gitlab::types;
 
-const OBJECTS_PER_PAGE: i32 = 100;
+const OBJECTS_PER_PAGE: i32 = 1000;
 const API_VERSION: &str = "v4";
 
 pub struct Client {
@@ -17,7 +17,6 @@ impl Client {
     pub fn new(token: String, mut url: Url) -> Result<Self, String> {
         let http = rqw::Client::new();
 
-        // TODO: add iterate by pages
         let query = format!("access_token={}&per_page={}", token, OBJECTS_PER_PAGE);
         url.set_path(&format!("api/{}", API_VERSION));
         url.set_query(Some(&query));
@@ -58,9 +57,42 @@ impl Client {
         }
     }
 
-    pub fn get_projects(&self) -> reqwest::Result<Vec<types::Project>> {
-        self.request(Method::GET, "projects")?
-            .json::<Vec<types::Project>>()
+    pub fn get_projects(&self) -> Result<Vec<types::Project>, String> {
+        let mut projects: Vec<types::Project> = vec![];
+        let mut next_page = 1;
+
+        loop {
+            let mut url = self.url.clone();
+            url.set_path(&format!("{}/{}", url.path(), "projects"));
+            let new_query = format!(
+                "{}&{}={}", url.query().ok_or("query is empty".to_owned())?, "page", next_page
+            );
+            url.set_query(Some(&new_query));
+
+            let resp = self.http
+                .request(Method::GET, url)
+                .header("Content-Type", "application/json")
+                .send()
+                .map_err(|e| e.to_string())?
+                .error_for_status()
+                .map_err(|e| e.to_string())?;
+
+            let headers = resp.headers().clone();
+
+            projects.append(
+                &mut resp
+                    .json::<Vec<types::Project>>()
+                    .map_err(|e| e.to_string())?
+            );
+
+            let next_page_header = headers.get("x-next-page").unwrap();
+            if next_page_header.is_empty() {
+                break;
+            }
+            next_page += 1;
+        };
+
+        Ok(projects)
     }
 
     pub fn make_project(
