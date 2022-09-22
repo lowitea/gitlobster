@@ -1,4 +1,5 @@
 use std::fs;
+use pbr::ProgressBar;
 
 use url::Url;
 
@@ -37,12 +38,16 @@ pub fn clone(
     let fetch_gl = gitlab::Client::new(fetch.token, fetch.url)?;
     let projects = fetch_gl.get_projects().unwrap();
 
-    // TODO: add progress bar
+    let mut pb = ProgressBar::new(projects.len() as u64);
+    pb.message("Pulling: ");
+
     for p in &projects {
         let relative_path = p.path_with_namespace.strip_suffix(&p.path).unwrap();
         let path = format!("{}/{}", &dst, relative_path);
         fs::create_dir_all(path).map_err(|e| e.to_string())?;
-        git::fetch(p.ssh_url_to_repo.clone(), format!("{}/{}", dst, p.path_with_namespace))?
+        git::fetch(p.ssh_url_to_repo.clone(), format!("{}/{}", dst, p.path_with_namespace))?;
+
+        pb.inc();
     }
 
     let (backup_gl, backup_group) = if let Some(backup) = backup {
@@ -55,7 +60,9 @@ pub fn clone(
         .get_group(backup_group)
         .map_err(|e| e.to_string())?;
 
-    // TODO: add progress bar
+    let mut pb = ProgressBar::new(projects.len() as u64);
+    pb.message("Pushing: ");
+
     for p in projects {
         let path = p.path_with_namespace.split("/").map(str::to_string).collect();
 
@@ -64,6 +71,8 @@ pub fn clone(
             .map_err(|e| e.to_string())?;
 
         git::push_backup(format!("{}/{}", dst, p.path_with_namespace), backup_project.ssh_url_to_repo)?;
+
+        pb.inc();
     };
 
     Ok(())
