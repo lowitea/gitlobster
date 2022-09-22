@@ -30,11 +30,11 @@ gitlobster -t token -u url DESTINATION_DIR
 
 - [x] Clone all available repositories from a Gitlab instance to a group on another GitLab instance while preserving the
   directory structure
-- [ ] Save not only the directory tree but also repository settings
 - [ ] Add cloning by http(s)
 - [ ] Add include/exclude patterns
+- [ ] Save not only the directory tree but also repository settings
+- [ ] Add show option for only show repositories list
 - [ ] Add config from file
 - [ ] Add debug option
-- [ ] Add tests
 - [ ] Add parallel cloning
-- [ ] Add show option for only show repositories list
+- [ ] Add tests
