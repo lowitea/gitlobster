@@ -42,9 +42,8 @@ impl Client {
             .json::<types::Project>()
     }
 
-    // TODO: remove copy-paste
-    pub fn project_exist(&self, path: String) -> reqwest::Result<Option<types::Project>> {
-        match self.get_project(path) {
+    fn exist<T>(&self, resp: reqwest::Result<T>) -> reqwest::Result<Option<T>> {
+        match resp {
             Ok(p) => Ok(Some(p)),
             Err(e) => {
                 // TODO: remove unwrap
@@ -55,6 +54,10 @@ impl Client {
                 }
             }
         }
+    }
+
+    pub fn project_exist(&self, path: String) -> reqwest::Result<Option<types::Project>> {
+        self.exist(self.get_project(path))
     }
 
     pub fn get_projects(&self) -> Result<Vec<types::Project>, String> {
@@ -124,17 +127,7 @@ impl Client {
     }
 
     pub fn group_exist(&self, path: String) -> reqwest::Result<Option<types::Group>> {
-        match self.get_group(path) {
-            Ok(g) => Ok(Some(g)),
-            Err(e) => {
-                // TODO: remove unwrap
-                if e.status().unwrap() == reqwest::StatusCode::NOT_FOUND {
-                    Ok(None)
-                } else {
-                    Err(e)
-                }
-            }
-        }
+        self.exist(self.get_group(path))
     }
 
     pub fn make_subgroup(
