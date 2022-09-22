@@ -1,3 +1,5 @@
+// TODO: handle stderr
+
 use std::process::Command;
 use std::str::from_utf8;
 
@@ -113,7 +115,6 @@ fn push_all_remote_backup(path: String) -> Result<(), String> {
         .arg("backup")
         .arg("--all")
         .output()
-        .map(|_| ())
         .map_err(|e| e.to_string())?;
 
     Command::new("git")

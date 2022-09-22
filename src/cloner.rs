@@ -38,12 +38,33 @@ pub fn clone(
     let projects = fetch_gl.get_projects().unwrap();
 
     // TODO: add progress bar
-    for p in projects {
+    for p in &projects {
         let relative_path = p.path_with_namespace.strip_suffix(&p.path).unwrap();
         let path = format!("{}/{}", &dst, relative_path);
         fs::create_dir_all(path).map_err(|e| e.to_string())?;
-        git::fetch(p.ssh_url_to_repo, format!("{}/{}", dst, p.path_with_namespace))?
+        git::fetch(p.ssh_url_to_repo.clone(), format!("{}/{}", dst, p.path_with_namespace))?
     }
+
+    let (backup_gl, backup_group) = if let Some(backup) = backup {
+        (gitlab::Client::new(backup.token, backup.url)?, backup.group)
+    } else {
+        return Ok(());
+    };
+
+    let root_group = backup_gl
+        .get_group(backup_group)
+        .map_err(|e| e.to_string())?;
+
+    // TODO: add progress bar
+    for p in projects {
+        let path = p.path_with_namespace.split("/").map(str::to_string).collect();
+
+        let backup_project = backup_gl
+            .make_project_with_namespace(path, &root_group)
+            .map_err(|e| e.to_string())?;
+
+        git::push_backup(format!("{}/{}", dst, p.path_with_namespace), backup_project.ssh_url_to_repo)?;
+    };
 
     Ok(())
 }

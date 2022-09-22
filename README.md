@@ -10,7 +10,7 @@ Inspired by [gitlabber](https://github.com/ezbz/gitlabber).
 - Clone all branches
 - Update all cloned repositories
 - Clone new repositories that have appeared
-- (TBD) Push the cloned repositories to a new GitLab instance, keeping the directory tree
+- Push the cloned repositories to a new GitLab instance, keeping the directory tree
 
 ## Install (TBD)
 
@@ -28,10 +28,10 @@ gitlobster -t token -u url DESTINATION_DIR
 
 ## TODO
 
-- [ ] Clone all available repositories from a Gitlab instance to a group on another GitLab instance while preserving the
+- [x] Clone all available repositories from a Gitlab instance to a group on another GitLab instance while preserving the
   directory structure
 - [ ] Save not only the directory tree but also repository settings
-- [ ] Add cloning by http
+- [ ] Add cloning by http(s)
 - [ ] Add include/exclude patterns
 - [ ] Add config from file
 - [ ] Add debug option
