@@ -5,7 +5,7 @@ use url::Url;
 
 use crate::gitlab::types;
 
-const OBJECTS_PER_PAGE: i32 = 3;
+const OBJECTS_PER_PAGE: i32 = 100;
 const API_VERSION: &str = "v4";
 
 pub struct Client {
