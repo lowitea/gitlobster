@@ -4,6 +4,14 @@ ___A tool for cloning all available repositories in a GitLab instance.___
 
 Inspired by [gitlabber](https://github.com/ezbz/gitlabber).
 
+<br>
+<br>
+<br>
+
+<p align="center">
+    <img src=" https://github.com/lowitea/gitlobster/raw/master/logo.svg">
+</p>
+
 ## Features
 
 - Cloning all available repositories from a Gitlab instance to a local folder while preserving the directory tree
