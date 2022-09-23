@@ -12,7 +12,6 @@ Inspired by [gitlabber](https://github.com/ezbz/gitlabber).
 </p>
 
 <br>
-<br>
 
 ## Features
 
