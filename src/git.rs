@@ -61,8 +61,10 @@ fn update(path: &String) -> Result<(), String> {
 
     let mut remote_branches: Vec<&str> = vec![];
 
+    let remote_prefix = "remotes/upstream/";
+
     for b in branches {
-        if b.starts_with("remotes/upstream") {
+        if b.starts_with(&remote_prefix) {
             remote_branches.append(&mut vec![b]);
             continue;
         }
@@ -78,8 +80,8 @@ fn update(path: &String) -> Result<(), String> {
     }
 
     for b in remote_branches {
-        // TODO: remove unwrap
-        let local_branch_name = b.strip_prefix("remotes/upstream/").unwrap();
+        let local_branch_name = b.strip_prefix(&remote_prefix)
+            .expect("situation is unreachable");
         Command::new("git")
             .arg("-C")
             .arg(path)
