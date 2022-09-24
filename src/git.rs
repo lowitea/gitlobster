@@ -1,134 +1,74 @@
-// TODO: handle stderr
-
+use std::ffi::OsStr;
 use std::process::Command;
 use std::str::from_utf8;
 
-fn check_status(path: &String) -> Result<(), String> {
-    Command::new("git")
-        .arg("-C")
-        .arg(path)
-        .arg("status")
+fn git<S: AsRef<OsStr>>(args: Vec<S>) -> Result<String, String> {
+    let cmd = Command::new("git")
+        .args(args)
         .output()
-        .map(|_| ())
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+
+    if !cmd.stderr.is_empty() {
+        let err = from_utf8(&cmd.stderr).map_err(|e| e.to_string())?;
+        return Err(err.to_string());
+    }
+
+    Ok(from_utf8(&cmd.stderr).map_err(|e| e.to_string())?.to_string())
+}
+
+fn check_status(path: &String) -> Result<(), String> {
+    git(vec!("-C", path, "status")).map(|_| ())
 }
 
 fn clone(src: &String, dst: &String) -> Result<(), String> {
-    Command::new("git")
-        .arg("clone")
-        .arg(src)
-        .arg(dst)
-        .output()
-        .map(|_| ())
-        .map_err(|e| e.to_string())?;
+    git(vec!("clone", src, dst))?;
+    git(vec!("-C", dst, "remote", "rename", "origin", "upstream"))?;
 
-    Command::new("git")
-        .arg("-C")
-        .arg(dst)
-        .arg("remote")
-        .arg("rename")
-        .arg("origin")
-        .arg("upstream")
-        .output()
-        .map(|_| ())
-        .map_err(|e| e.to_string())
+    Ok(())
 }
 
 fn update(path: &String) -> Result<(), String> {
-    Command::new("git")
-        .arg("-C")
-        .arg(path)
-        .arg("fetch")
-        .arg("--all")
-        .output()
-        .map(|_| ())
-        .map_err(|e| e.to_string())?;
+    git(vec!("-C", path, "fetch", "--all"))?;
 
-    let branches_out = Command::new("git")
-        .arg("-C")
-        .arg(path)
-        .arg("branch")
-        .arg("-la")
-        .output()
-        .map_err(|e| e.to_string())?;
-
-    let branches = from_utf8(&branches_out.stdout)
-        .map_err(|e| e.to_string())?
+    let branches_out = git(vec!("-C", path, "branch", "-la"))?;
+    let branches = branches_out
         .split("\n")
         .into_iter()
         .map(|v| v.trim())
-        .filter(|v| !v.starts_with("*") && !v.is_empty() && !v.starts_with("remotes/upstream/HEAD"));
-
-    let mut remote_branches: Vec<&str> = vec![];
+        .filter(|v| !v.is_empty())
+        .filter(|v| !v.starts_with("*"))
+        .filter(|v| !v.starts_with("remotes/upstream/HEAD"));
 
     let remote_prefix = "remotes/upstream/";
+    let mut remote_branches: Vec<&str> = vec![];
 
     for b in branches {
         if b.starts_with(&remote_prefix) {
-            remote_branches.append(&mut vec![b]);
+            remote_branches.push(b);
             continue;
         }
-        Command::new("git")
-            .arg("-C")
-            .arg(path)
-            .arg("branch")
-            .arg("-D")
-            .arg(b)
-            .output()
-            .map(|_| ())
-            .map_err(|e| e.to_string())?;
+        git(vec!("-C", path, "branch", "-D", b))?;
     }
 
     for b in remote_branches {
         let local_branch_name = b.strip_prefix(&remote_prefix)
             .expect("situation is unreachable");
-        Command::new("git")
-            .arg("-C")
-            .arg(path)
-            .arg("branch")
-            .arg("--track")
-            .arg(local_branch_name)
-            .arg(b)
-            .output()
-            .map(|_| ())
-            .map_err(|e| e.to_string())?;
+
+        git(vec!("-C", path, "branch", "--track", local_branch_name, b))?;
     }
 
     Ok(())
 }
 
-fn add_remote_backup(path: &String, remote: String) {
-    let _ = Command::new("git")
-        .arg("-C")
-        .arg(path)
-        .arg("remote")
-        .arg("add")
-        .arg("backup")
-        .arg(remote)
-        .output();
+fn add_remote_backup(path: &String, remote: String) -> Result<(), String> {
+    git(vec!("-C", path, "remote", "add", "backup", &remote))?;
+    Ok(())
 }
 
 fn push_all_remote_backup(path: String) -> Result<(), String> {
-    Command::new("git")
-        .arg("-C")
-        .arg(&path)
-        .arg("push")
-        .arg("-u")
-        .arg("backup")
-        .arg("--all")
-        .output()
-        .map_err(|e| e.to_string())?;
-
-    Command::new("git")
-        .arg("-C")
-        .arg(&path)
-        .arg("push")
-        .arg("-u")
-        .arg("backup")
-        .arg("--tags")
-        .output()
-        .map(|_| ())
-        .map_err(|e| e.to_string())
+    git(vec!("-C", &path, "push", "-u", "backup", "--all"))?;
+    git(vec!("-C", &path, "push", "-u", "backup", "--tags"))?;
+    Ok(())
 }
 
 pub fn fetch(src: String, dst: String) -> Result<(), String> {
@@ -137,6 +77,6 @@ pub fn fetch(src: String, dst: String) -> Result<(), String> {
 }
 
 pub fn push_backup(path: String, remote: String) -> Result<(), String> {
-    add_remote_backup(&path, remote);
+    add_remote_backup(&path, remote)?;
     push_all_remote_backup(path)
 }
