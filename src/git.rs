@@ -8,10 +8,11 @@ fn git<S: AsRef<OsStr>>(args: Vec<S>) -> Result<String, String> {
         .output()
         .map_err(|e| e.to_string())?;
 
-    if !cmd.stderr.is_empty() {
-        let err = from_utf8(&cmd.stderr).map_err(|e| e.to_string())?;
-        return Err(err.to_string());
-    }
+    // TODO: enable for debug flag
+    // if !cmd.stderr.is_empty() {
+    //     let err = from_utf8(&cmd.stderr).map_err(|e| e.to_string())?;
+    //     println!("Warning: {}", err);
+    // }
 
     Ok(from_utf8(&cmd.stderr).map_err(|e| e.to_string())?.to_string())
 }
@@ -61,6 +62,7 @@ fn update(path: &String) -> Result<(), String> {
 }
 
 fn add_remote_backup(path: &String, remote: String) -> Result<(), String> {
+    git(vec!("-C", path, "remote", "remove", "backup"))?;
     git(vec!("-C", path, "remote", "add", "backup", &remote))?;
     Ok(())
 }
