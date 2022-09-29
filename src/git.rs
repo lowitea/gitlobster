@@ -37,15 +37,20 @@ fn update(path: &String) -> Result<(), String> {
         .into_iter()
         .map(|v| v.trim())
         .filter(|v| !v.is_empty())
-        .filter(|v| !v.starts_with("*"))
-        .filter(|v| !v.starts_with("remotes/upstream/HEAD"));
+        .filter(|v| !v.starts_with("remotes/upstream/HEAD"))
+        .filter(|v| !v.starts_with("remotes/backup"));
 
     let remote_prefix = "remotes/upstream/";
     let mut remote_branches: Vec<&str> = vec![];
+    let mut default_branch = "";
 
     for b in branches {
         if b.starts_with(&remote_prefix) {
             remote_branches.push(b);
+            continue;
+        }
+        if b.starts_with("*") {
+            default_branch = b.strip_prefix("*").expect("situation is unreachable").trim();
             continue;
         }
         git(vec!("-C", path, "branch", "-D", b))?;
@@ -57,6 +62,8 @@ fn update(path: &String) -> Result<(), String> {
 
         git(vec!("-C", path, "branch", "--track", local_branch_name, b))?;
     }
+
+    git(vec!["-C", path, "pull", "upstream", default_branch])?;
 
     Ok(())
 }
