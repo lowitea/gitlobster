@@ -14,7 +14,7 @@ fn git<S: AsRef<OsStr>>(args: Vec<S>) -> Result<String, String> {
     //     println!("Warning: {}", err);
     // }
 
-    Ok(from_utf8(&cmd.stderr).map_err(|e| e.to_string())?.to_string())
+    Ok(from_utf8(&cmd.stdout).map_err(|e| e.to_string())?.to_string())
 }
 
 fn check_status(path: &String) -> Result<(), String> {
@@ -74,7 +74,10 @@ fn push_all_remote_backup(path: String) -> Result<(), String> {
 }
 
 pub fn fetch(src: String, dst: String) -> Result<(), String> {
-    check_status(&dst).unwrap_or(clone(&src, &dst)?);
+    match check_status(&dst) {
+        Ok(_) => (),
+        Err(_) => clone(&src, &dst)?,
+    };
     update(&dst)
 }
 
