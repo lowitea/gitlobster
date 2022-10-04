@@ -1,3 +1,4 @@
+use chrono::Utc;
 use reqwest::blocking as rqw;
 use reqwest::Method;
 use serde::Serialize;
@@ -98,23 +99,49 @@ impl Client {
         Ok(projects)
     }
 
+    fn make_project_description(new_description: Option<String>) -> String {
+        format!("{} 🦞 Synced: {}", new_description.unwrap_or("".to_string()), Utc::now())
+    }
+
     pub fn make_project(
         &self,
         name: String,
         group_id: types::GroupId,
+        info: &types::Project,
     ) -> reqwest::Result<types::Project> {
         #[derive(Serialize)]
         struct MakeProjectRequest {
             name: String,
+            description: String,
             path: String,
             namespace_id: types::GroupId,
         }
 
         let path = name.clone();
         let namespace_id = group_id;
+        let description = Client::make_project_description(info.description.clone());
 
         self.build_request(Method::POST, "projects")
-            .json(&MakeProjectRequest { name, path, namespace_id })
+            .json(&MakeProjectRequest { name, description, path, namespace_id })
+            .send()?
+            .error_for_status()?
+            .json::<types::Project>()
+    }
+
+    pub fn update_project(
+        &self,
+        project: &types::Project,
+        info: &types::Project,
+    ) -> reqwest::Result<types::Project> {
+        #[derive(Serialize)]
+        struct UpdateProjectRequest {
+            description: String,
+        }
+
+        let description = Client::make_project_description(info.description.clone());
+
+        self.build_request(Method::PUT, format!("projects/{}", project.id))
+            .json(&UpdateProjectRequest { description })
             .send()?
             .error_for_status()?
             .json::<types::Project>()
@@ -155,6 +182,7 @@ impl Client {
         &self,
         mut path: Vec<String>,
         root_group: &types::Group,
+        project_info: &types::Project,
     ) -> reqwest::Result<types::Project> {
         let mut parent_id = root_group.id;
 
@@ -175,8 +203,8 @@ impl Client {
         };
 
         match self.project_exist(format!("{}/{}", current_namespace, project_name))? {
-            Some(p) => Ok(p),
-            None => self.make_project(project_name, parent_id)
+            Some(p) => self.update_project(&p, project_info),
+            None => self.make_project(project_name, parent_id, project_info)
         }
     }
 }

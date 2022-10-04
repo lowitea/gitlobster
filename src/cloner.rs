@@ -1,6 +1,6 @@
 use std::fs;
-use pbr::ProgressBar;
 
+use pbr::ProgressBar;
 use url::Url;
 
 use crate::{git, gitlab};
@@ -67,7 +67,7 @@ pub fn clone(
         let path = p.path_with_namespace.split("/").map(str::to_string).collect();
 
         let backup_project = backup_gl
-            .make_project_with_namespace(path, &root_group)
+            .make_project_with_namespace(path, &root_group, &p)
             .map_err(|e| e.to_string())?;
 
         git::push_backup(format!("{}/{}", dst, p.path_with_namespace), backup_project.ssh_url_to_repo)?;
