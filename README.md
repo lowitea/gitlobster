@@ -43,7 +43,7 @@ gitlobster -t token -u url DESTINATION_DIR
 - [ ] Save not only the directory tree but also repository settings
 - [ ] Add show option for only show repositories list
 - [ ] Add config from file
-- [ ] Add debug option
+- [x] Add debug option
 - [ ] Add limit option
 - [ ] Add per-page-for-fetch option
 - [ ] Add parallel cloning
