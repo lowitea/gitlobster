@@ -29,12 +29,25 @@ struct Cli {
     /// A destination local folder for save downloaded repositories
     #[clap(value_parser, value_name = "DIRECTORY")]
     dst: String,
+
+    /// Verbose level (one or more, max four)
+    #[clap(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
 }
 
 pub fn run() -> Result<(), String> {
     let cli = Cli::parse();
-    let fetch_gl = FetchGitlabOptions::new(cli.fu, cli.ft)?;
 
+    let log_level = match cli.verbose {
+        0 => tracing::Level::ERROR,
+        1 => tracing::Level::WARN,
+        2 => tracing::Level::INFO,
+        3 => tracing::Level::DEBUG,
+        _ => tracing::Level::TRACE,
+    };
+    tracing_subscriber::fmt().with_max_level(log_level).init();
+
+    let fetch_gl = FetchGitlabOptions::new(cli.fu, cli.ft)?;
     let backup_gl = if let (Some(url), Some(token), Some(group)) = (cli.bu, cli.bt, cli.bg) {
         Some(BackupGitlabOptions::new(url, token, group)?)
     } else {

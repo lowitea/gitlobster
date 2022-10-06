@@ -1,10 +1,12 @@
 use std::fs;
 
 use pbr::ProgressBar;
+use tracing::{debug, info, instrument};
 use url::Url;
 
 use crate::{git, gitlab};
 
+#[derive(Debug)]
 pub struct FetchGitlabOptions {
     url: Url,
     token: String,
@@ -17,6 +19,7 @@ impl FetchGitlabOptions {
     }
 }
 
+#[derive(Debug)]
 pub struct BackupGitlabOptions {
     url: Url,
     token: String,
@@ -30,6 +33,7 @@ impl BackupGitlabOptions {
     }
 }
 
+#[instrument(level = "trace")]
 pub fn clone(
     fetch: FetchGitlabOptions,
     dst: String,
@@ -38,13 +42,18 @@ pub fn clone(
     let fetch_gl = gitlab::Client::new(fetch.token, fetch.url)?;
     let projects = fetch_gl.get_projects().unwrap();
 
+    info!("start pulling");
+
     let mut pb = ProgressBar::new(projects.len() as u64);
     pb.message("Pulling: ");
 
     for p in &projects {
-        let relative_path = p.path_with_namespace.strip_suffix(&p.path).unwrap();
-        let path = format!("{}/{}", &dst, relative_path);
+        debug!("project path: {}", &p.path_with_namespace);
+
+        let dir_path = p.path_with_namespace.strip_suffix(&p.path).unwrap();
+        let path = format!("{}/{}", &dst, dir_path);
         fs::create_dir_all(path).map_err(|e| e.to_string())?;
+
         git::fetch(p.ssh_url_to_repo.clone(), format!("{}/{}", dst, p.path_with_namespace))?;
 
         pb.inc();
@@ -59,6 +68,8 @@ pub fn clone(
     let root_group = backup_gl
         .get_group(backup_group)
         .map_err(|e| e.to_string())?;
+
+    info!("start pushing");
 
     let mut pb = ProgressBar::new(projects.len() as u64);
     pb.message("Pushing: ");

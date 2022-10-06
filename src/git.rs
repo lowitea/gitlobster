@@ -2,7 +2,15 @@ use std::ffi::OsStr;
 use std::process::Command;
 use std::str::from_utf8;
 
+use tracing::{info, error, warn};
+
 fn git<S: AsRef<OsStr>>(args: Vec<S>) -> Result<String, String> {
+    let mut git_cmd = "git".to_string();
+    for a in &args {
+        git_cmd += &format!(" {}", a.as_ref().to_str().unwrap());
+    }
+    info!("{}", git_cmd);
+
     let cmd = Command::new("git")
         .args(args)
         .output()
