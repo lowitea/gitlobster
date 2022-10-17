@@ -16,6 +16,7 @@ urlencoding = "2"
 pbr = "1"
 tracing = "0.1"
 tracing-subscriber = "0.3"
+regex = "1"
 
 [profile]
 [profile.release]

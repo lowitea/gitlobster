@@ -1,10 +1,12 @@
 use std::fs;
 
 use pbr::ProgressBar;
+use regex::Regex;
 use tracing::{debug, info, instrument};
 use url::Url;
 
 use crate::{git, gitlab};
+use crate::gitlab::types;
 
 #[derive(Debug)]
 pub struct FetchGitlabOptions {
@@ -33,14 +35,61 @@ impl BackupGitlabOptions {
     }
 }
 
+fn filter_projects(
+    mut projects: Vec<types::Project>,
+    include: Option<Vec<String>>,
+    exclude: Option<Vec<String>>,
+) -> Result<Vec<types::Project>, String> {
+    if exclude.is_some() && include.is_some() {
+        panic!("you cannot use include and exclude filters together")
+    }
+
+    if let Some(i_filters) = include {
+        let mut filters: Vec<Regex> = vec![];
+        for f in i_filters {
+            filters.push(Regex::new(&f).map_err(|e|e.to_string())?);
+        }
+        projects = projects.into_iter().filter(
+            move |p| {
+                for filter in filters.clone() {
+                    if filter.is_match(&p.path_with_namespace) {
+                        return true;
+                    }
+                }
+                false
+            }
+        ).collect();
+    } else if let Some(e_filters) = exclude {
+        let mut filters: Vec<Regex> = vec![];
+        for f in e_filters {
+            filters.push(Regex::new(&f).map_err(|e|e.to_string())?);
+        }
+        projects = projects.into_iter().filter(
+            move |p| {
+                for filter in filters.clone() {
+                    if filter.is_match(&p.path_with_namespace) {
+                        return false;
+                    }
+                }
+                true
+            }
+
+        ).collect();
+    }
+
+    Ok(projects)
+}
+
 #[instrument(level = "trace")]
 pub fn clone(
     fetch: FetchGitlabOptions,
     dst: String,
     backup: Option<BackupGitlabOptions>,
+    include: Option<Vec<String>>,
+    exclude: Option<Vec<String>>,
 ) -> Result<(), String> {
     let fetch_gl = gitlab::Client::new(fetch.token, fetch.url)?;
-    let projects = fetch_gl.get_projects().unwrap();
+    let projects = filter_projects(fetch_gl.get_projects()?, include, exclude)?;
 
     info!("start pulling");
 
