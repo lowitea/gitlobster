@@ -73,12 +73,23 @@ pub fn clone(
     dst: String,
     backup: Option<BackupGitlabOptions>,
     patterns: Option<FilterPatterns>,
+    dry_run: bool,
 ) -> Result<(), String> {
     let fetch_gl = gitlab::Client::new(fetch.token, fetch.url)?;
     let mut projects = fetch_gl.get_projects()?;
 
     if let Some(patterns) = patterns {
         projects = filter_projects(projects, patterns)?
+    }
+
+    if dry_run {
+        for p in &projects {
+            println!(
+                "{: <32} (id: {}, path: {})",
+                p.name, p.id, p.path_with_namespace
+            );
+        }
+        return Ok(());
     }
 
     info!("start pulling");

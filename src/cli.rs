@@ -51,6 +51,10 @@ struct Cli {
     /// Verbose level (one or more, max four)
     #[clap(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
+
+    #[clap(long)]
+    /// Show all projects to download
+    dry_run: bool,
 }
 
 pub fn run() -> Result<(), String> {
@@ -81,5 +85,5 @@ pub fn run() -> Result<(), String> {
         None
     };
 
-    clone(fetch_gl, cli.dst, backup_gl, patterns)
+    clone(fetch_gl, cli.dst, backup_gl, patterns, cli.dry_run)
 }
