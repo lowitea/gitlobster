@@ -41,7 +41,7 @@ gitlobster -t token -u url DESTINATION_DIR
   directory structure
 - [x] Add include/exclude patterns
 - [ ] Save not only the directory tree but also repository settings
-- [ ] Add show option for only show repositories list
+- [x] Add show option for only show repositories list
 - [ ] Add config from file
 - [x] Add debug option
 - [ ] Add limit option
