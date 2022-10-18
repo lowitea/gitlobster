@@ -2,11 +2,11 @@ use std::fs;
 
 use pbr::ProgressBar;
 use regex::Regex;
-use tracing::{debug, info, instrument};
+use tracing::{debug, info};
 use url::Url;
 
-use crate::{git, gitlab};
 use crate::gitlab::types;
+use crate::{git, gitlab};
 
 #[derive(Debug)]
 pub struct FetchGitlabOptions {
@@ -35,61 +35,51 @@ impl BackupGitlabOptions {
     }
 }
 
+pub enum FilterPatterns {
+    Include(Vec<String>),
+    Exclude(Vec<String>),
+}
+
 fn filter_projects(
-    mut projects: Vec<types::Project>,
-    include: Option<Vec<String>>,
-    exclude: Option<Vec<String>>,
+    projects: Vec<types::Project>,
+    patterns: FilterPatterns,
 ) -> Result<Vec<types::Project>, String> {
-    if exclude.is_some() && include.is_some() {
-        panic!("you cannot use include and exclude filters together")
+    let (filter_bit, patterns) = match patterns {
+        FilterPatterns::Include(p) => (true, p),
+        FilterPatterns::Exclude(p) => (false, p),
+    };
+
+    let mut filters: Vec<Regex> = vec![];
+    for f in patterns {
+        filters.push(Regex::new(&f).map_err(|e| e.to_string())?);
     }
 
-    if let Some(i_filters) = include {
-        let mut filters: Vec<Regex> = vec![];
-        for f in i_filters {
-            filters.push(Regex::new(&f).map_err(|e|e.to_string())?);
-        }
-        projects = projects.into_iter().filter(
-            move |p| {
-                for filter in filters.clone() {
-                    if filter.is_match(&p.path_with_namespace) {
-                        return true;
-                    }
-                }
-                false
+    let filter_func = |project: &types::Project| -> bool {
+        for filter in filters.clone() {
+            if filter.is_match(&project.path_with_namespace) {
+                return filter_bit;
             }
-        ).collect();
-    } else if let Some(e_filters) = exclude {
-        let mut filters: Vec<Regex> = vec![];
-        for f in e_filters {
-            filters.push(Regex::new(&f).map_err(|e|e.to_string())?);
         }
-        projects = projects.into_iter().filter(
-            move |p| {
-                for filter in filters.clone() {
-                    if filter.is_match(&p.path_with_namespace) {
-                        return false;
-                    }
-                }
-                true
-            }
+        !filter_bit
+    };
 
-        ).collect();
-    }
+    let projects = projects.into_iter().filter(filter_func).collect();
 
     Ok(projects)
 }
 
-#[instrument(level = "trace")]
 pub fn clone(
     fetch: FetchGitlabOptions,
     dst: String,
     backup: Option<BackupGitlabOptions>,
-    include: Option<Vec<String>>,
-    exclude: Option<Vec<String>>,
+    patterns: Option<FilterPatterns>,
 ) -> Result<(), String> {
     let fetch_gl = gitlab::Client::new(fetch.token, fetch.url)?;
-    let projects = filter_projects(fetch_gl.get_projects()?, include, exclude)?;
+    let mut projects = fetch_gl.get_projects()?;
+
+    if let Some(patterns) = patterns {
+        projects = filter_projects(projects, patterns)?
+    }
 
     info!("start pulling");
 
@@ -103,7 +93,10 @@ pub fn clone(
         let path = format!("{}/{}", &dst, dir_path);
         fs::create_dir_all(path).map_err(|e| e.to_string())?;
 
-        git::fetch(p.ssh_url_to_repo.clone(), format!("{}/{}", dst, p.path_with_namespace))?;
+        git::fetch(
+            p.ssh_url_to_repo.clone(),
+            format!("{}/{}", dst, p.path_with_namespace),
+        )?;
 
         pb.inc();
     }
@@ -124,16 +117,23 @@ pub fn clone(
     pb.message("Pushing: ");
 
     for p in projects {
-        let path = p.path_with_namespace.split("/").map(str::to_string).collect();
+        let path = p
+            .path_with_namespace
+            .split('/')
+            .map(str::to_string)
+            .collect();
 
         let backup_project = backup_gl
             .make_project_with_namespace(path, &root_group, &p)
             .map_err(|e| e.to_string())?;
 
-        git::push_backup(format!("{}/{}", dst, p.path_with_namespace), backup_project.ssh_url_to_repo)?;
+        git::push_backup(
+            format!("{}/{}", dst, p.path_with_namespace),
+            backup_project.ssh_url_to_repo,
+        )?;
 
         pb.inc();
-    };
+    }
 
     Ok(())
 }

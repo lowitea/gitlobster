@@ -46,7 +46,7 @@ fn update(path: &String) -> Result<(), String> {
 
     let branches_out = git(vec!("-C", path, "branch", "-la"))?;
     let branches = branches_out
-        .split("\n")
+        .split('\n')
         .into_iter()
         .map(|v| v.trim())
         .filter(|v| !v.is_empty())
@@ -62,8 +62,8 @@ fn update(path: &String) -> Result<(), String> {
             remote_branches.push(b);
             continue;
         }
-        if b.starts_with("*") {
-            default_branch = b.strip_prefix("*").expect("situation is unreachable").trim();
+        if b.starts_with('*') {
+            default_branch = b.strip_prefix('*').expect("situation is unreachable").trim();
             continue;
         }
         git(vec!("-C", path, "branch", "-D", b))?;
