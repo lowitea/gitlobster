@@ -74,8 +74,9 @@ pub fn clone(
     backup: Option<BackupGitlabOptions>,
     patterns: Option<FilterPatterns>,
     dry_run: bool,
+    objects_per_page: Option<u32>,
 ) -> Result<(), String> {
-    let fetch_gl = gitlab::Client::new(fetch.token, fetch.url)?;
+    let fetch_gl = gitlab::Client::new(fetch.token, fetch.url, objects_per_page)?;
     let mut projects = fetch_gl.get_projects()?;
 
     if let Some(patterns) = patterns {
@@ -113,7 +114,10 @@ pub fn clone(
     }
 
     let (backup_gl, backup_group) = if let Some(backup) = backup {
-        (gitlab::Client::new(backup.token, backup.url)?, backup.group)
+        (
+            gitlab::Client::new(backup.token, backup.url, None)?,
+            backup.group,
+        )
     } else {
         return Ok(());
     };

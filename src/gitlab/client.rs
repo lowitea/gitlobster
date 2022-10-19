@@ -6,7 +6,6 @@ use url::Url;
 
 use crate::gitlab::types;
 
-const OBJECTS_PER_PAGE: i32 = 1000;
 const API_VERSION: &str = "v4";
 
 pub struct Client {
@@ -15,10 +14,11 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(token: String, mut url: Url) -> Result<Self, String> {
+    pub fn new(token: String, mut url: Url, opp: Option<u32>) -> Result<Self, String> {
         let http = rqw::Client::new();
+        let opp = if let Some(opp) = opp { opp } else { 1000 };
 
-        let query = format!("access_token={}&per_page={}", token, OBJECTS_PER_PAGE);
+        let query = format!("access_token={}&per_page={}", token, opp);
         url.set_path(&format!("api/{}", API_VERSION));
         url.set_query(Some(&query));
 
@@ -69,11 +69,15 @@ impl Client {
             let mut url = self.url.clone();
             url.set_path(&format!("{}/{}", url.path(), "projects"));
             let new_query = format!(
-                "{}&{}={}", url.query().ok_or("query is empty".to_owned())?, "page", next_page
+                "{}&{}={}",
+                url.query().ok_or("query is empty".to_owned())?,
+                "page",
+                next_page
             );
             url.set_query(Some(&new_query));
 
-            let resp = self.http
+            let resp = self
+                .http
                 .request(Method::GET, url)
                 .header("Content-Type", "application/json")
                 .send()
@@ -86,7 +90,7 @@ impl Client {
             projects.append(
                 &mut resp
                     .json::<Vec<types::Project>>()
-                    .map_err(|e| e.to_string())?
+                    .map_err(|e| e.to_string())?,
             );
 
             let next_page_header = headers.get("x-next-page").unwrap();
@@ -94,13 +98,17 @@ impl Client {
                 break;
             }
             next_page += 1;
-        };
+        }
 
         Ok(projects)
     }
 
     fn make_project_description(new_description: Option<String>) -> String {
-        format!("{} 🦞 Synced: {}", new_description.unwrap_or("".to_string()), Utc::now())
+        format!(
+            "{} 🦞 Synced: {}",
+            new_description.unwrap_or("".to_string()),
+            Utc::now()
+        )
     }
 
     pub fn make_project(
@@ -122,7 +130,12 @@ impl Client {
         let description = Client::make_project_description(info.description.clone());
 
         self.build_request(Method::POST, "projects")
-            .json(&MakeProjectRequest { name, description, path, namespace_id })
+            .json(&MakeProjectRequest {
+                name,
+                description,
+                path,
+                namespace_id,
+            })
             .send()?
             .error_for_status()?
             .json::<types::Project>()
@@ -172,7 +185,11 @@ impl Client {
         let path = name.clone();
 
         self.build_request(Method::POST, "groups")
-            .json(&MakeGroupRequest { name, path, parent_id })
+            .json(&MakeGroupRequest {
+                name,
+                path,
+                parent_id,
+            })
             .send()?
             .error_for_status()?
             .json::<types::Group>()
@@ -200,11 +217,11 @@ impl Client {
             };
 
             parent_id = group.id;
-        };
+        }
 
         match self.project_exist(format!("{}/{}", current_namespace, project_name))? {
             Some(p) => self.update_project(&p, project_info),
-            None => self.make_project(project_name, parent_id, project_info)
+            None => self.make_project(project_name, parent_id, project_info),
         }
     }
 }

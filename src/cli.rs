@@ -55,6 +55,10 @@ struct Cli {
     #[clap(long)]
     /// Show all projects to download
     dry_run: bool,
+
+    #[clap(long, value_parser, value_name = "COUNT")]
+    /// Low-level option, how many projects can fetch in one request
+    objects_per_page: u32,
 }
 
 pub fn run() -> Result<(), String> {
@@ -85,5 +89,12 @@ pub fn run() -> Result<(), String> {
         None
     };
 
-    clone(fetch_gl, cli.dst, backup_gl, patterns, cli.dry_run)
+    clone(
+        fetch_gl,
+        cli.dst,
+        backup_gl,
+        patterns,
+        cli.dry_run,
+        cli.objects_per_page,
+    )
 }

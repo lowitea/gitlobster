@@ -1,6 +1,8 @@
 mod cli;
 mod cloner;
-mod gitlab;
 mod git;
+mod gitlab;
 
-fn main() -> Result<(), String> { cli::run() }
+fn main() -> Result<(), String> {
+    cli::run()
+}

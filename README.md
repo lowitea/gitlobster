@@ -1,6 +1,6 @@
 # Gitlobster
 
-___A tool for cloning all available repositories in a GitLab instance.___
+**_A tool for cloning all available repositories in a GitLab instance._**
 
 Inspired by [gitlabber](https://github.com/ezbz/gitlabber).
 
@@ -23,7 +23,7 @@ Inspired by [gitlabber](https://github.com/ezbz/gitlabber).
 
 ## Install (TBD)
 
-[//]: # (TODO: Write a complete installation guide)
+[//]: # "TODO: Write a complete installation guide"
 
 ```shell
 cargo build --release
@@ -38,14 +38,14 @@ gitlobster -t token -u url DESTINATION_DIR
 ## TODO
 
 - [x] Clone all available repositories from a Gitlab instance to a group on another GitLab instance while preserving the
-  directory structure
+      directory structure
 - [x] Add include/exclude patterns
 - [ ] Save not only the directory tree but also repository settings
 - [x] Add show option for only show repositories list
 - [ ] Add config from file
 - [x] Add debug option
 - [ ] Add limit option
-- [ ] Add per-page-for-fetch option
+- [x] Add per-page-for-fetch option
 - [ ] Add parallel cloning
 - [ ] Add cloning by http(s)
 - [ ] Add tests
