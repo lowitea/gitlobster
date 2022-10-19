@@ -74,9 +74,9 @@ pub fn clone(
     backup: Option<BackupGitlabOptions>,
     patterns: Option<FilterPatterns>,
     dry_run: bool,
-    objects_per_page: u32,
+    objects_per_page: Option<u32>,
 ) -> Result<(), String> {
-    let fetch_gl = gitlab::Client::new(fetch.token, fetch.url, Some(objects_per_page))?;
+    let fetch_gl = gitlab::Client::new(fetch.token, fetch.url, objects_per_page)?;
     let mut projects = fetch_gl.get_projects()?;
 
     if let Some(patterns) = patterns {
