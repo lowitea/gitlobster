@@ -43,6 +43,7 @@ pub enum FilterPatterns {
 fn filter_projects(
     projects: Vec<types::Project>,
     patterns: FilterPatterns,
+    limit: Option<usize>,
 ) -> Result<Vec<types::Project>, String> {
     let (filter_bit, patterns) = match patterns {
         FilterPatterns::Include(p) => (true, p),
@@ -63,7 +64,13 @@ fn filter_projects(
         !filter_bit
     };
 
-    let projects = projects.into_iter().filter(filter_func).collect();
+    let mut projects: Vec<types::Project> = projects.into_iter().filter(filter_func).collect();
+
+    if let Some(limit) = limit {
+        if projects.len() > limit {
+            projects = projects[0..limit].to_vec();
+        }
+    }
 
     Ok(projects)
 }
@@ -75,12 +82,13 @@ pub fn clone(
     patterns: Option<FilterPatterns>,
     dry_run: bool,
     objects_per_page: Option<u32>,
+    limit: Option<usize>,
 ) -> Result<(), String> {
     let fetch_gl = gitlab::Client::new(fetch.token, fetch.url, objects_per_page)?;
     let mut projects = fetch_gl.get_projects()?;
 
     if let Some(patterns) = patterns {
-        projects = filter_projects(projects, patterns)?
+        projects = filter_projects(projects, patterns, limit)?
     }
 
     if dry_run {

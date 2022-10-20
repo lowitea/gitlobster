@@ -58,7 +58,11 @@ struct Cli {
 
     #[clap(long, value_parser, value_name = "COUNT")]
     /// Low-level option, how many projects can fetch in one request
-    objects_per_page: u32,
+    objects_per_page: Option<u32>,
+
+    #[clap(long, value_parser, value_name = "COUNT")]
+    /// Maximum projects to download
+    limit: Option<usize>,
 }
 
 pub fn run() -> Result<(), String> {
@@ -96,5 +100,6 @@ pub fn run() -> Result<(), String> {
         patterns,
         cli.dry_run,
         cli.objects_per_page,
+        cli.limit,
     )
 }
