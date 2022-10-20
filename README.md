@@ -44,7 +44,7 @@ gitlobster -t token -u url DESTINATION_DIR
 - [x] Add show option for only show repositories list
 - [ ] Add config from file
 - [x] Add debug option
-- [ ] Add limit option
+- [x] Add limit option
 - [x] Add per-page-for-fetch option
 - [ ] Add parallel cloning
 - [ ] Add cloning by http(s)

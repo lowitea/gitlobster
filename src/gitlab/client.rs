@@ -70,7 +70,7 @@ impl Client {
             url.set_path(&format!("{}/{}", url.path(), "projects"));
             let new_query = format!(
                 "{}&{}={}",
-                url.query().ok_or("query is empty".to_owned())?,
+                url.query().ok_or_else(|| "query is empty".to_owned())?,
                 "page",
                 next_page
             );
@@ -97,6 +97,7 @@ impl Client {
             if next_page_header.is_empty() {
                 break;
             }
+
             next_page += 1;
         }
 
