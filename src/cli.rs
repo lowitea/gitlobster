@@ -63,6 +63,10 @@ struct Cli {
     #[clap(long, value_parser, value_name = "COUNT")]
     /// Maximum projects to download
     limit: Option<usize>,
+
+    #[clap(long, value_parser, default_value_t=21, value_name = "LIMIT")]
+    /// Limit concurrency download
+    concurrency_limit: usize,
 }
 
 pub fn run() -> Result<(), String> {
@@ -101,5 +105,6 @@ pub fn run() -> Result<(), String> {
         cli.dry_run,
         cli.objects_per_page,
         cli.limit,
+        cli.concurrency_limit,
     )
 }
