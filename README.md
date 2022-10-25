@@ -46,6 +46,6 @@ gitlobster -t token -u url DESTINATION_DIR
 - [x] Add debug option
 - [x] Add limit option
 - [x] Add per-page-for-fetch option
-- [ ] Add parallel cloning
+- [x] Add parallel cloning
 - [ ] Add cloning by http(s)
 - [ ] Add tests

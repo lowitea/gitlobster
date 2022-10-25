@@ -1,6 +1,5 @@
 use chrono::Utc;
-use reqwest::blocking as rqw;
-use reqwest::Method;
+use reqwest::{Method, RequestBuilder};
 use serde::Serialize;
 use url::Url;
 
@@ -10,12 +9,12 @@ const API_VERSION: &str = "v4";
 
 pub struct Client {
     url: Url,
-    http: rqw::Client,
+    http: reqwest::Client,
 }
 
 impl Client {
     pub fn new(token: String, mut url: Url, opp: Option<u32>) -> Result<Self, String> {
-        let http = rqw::Client::new();
+        let http = reqwest::Client::new();
         let opp = if let Some(opp) = opp { opp } else { 1000 };
 
         let query = format!("access_token={}&per_page={}", token, opp);
@@ -25,7 +24,7 @@ impl Client {
         Ok(Client { url, http })
     }
 
-    fn build_request<S: Into<String>>(&self, m: Method, path: S) -> rqw::RequestBuilder {
+    fn build_request<S: Into<String>>(&self, m: Method, path: S) -> RequestBuilder {
         let mut url = self.url.clone();
         url.set_path(&format!("{}/{}", url.path(), path.into()));
         self.http
@@ -33,14 +32,20 @@ impl Client {
             .header("Content-Type", "application/json")
     }
 
-    fn request<S: Into<String>>(&self, m: Method, path: S) -> reqwest::Result<rqw::Response> {
-        self.build_request(m, path).send()?.error_for_status()
+    async fn request<S: Into<String>>(
+        &self,
+        m: Method,
+        path: S,
+    ) -> reqwest::Result<reqwest::Response> {
+        self.build_request(m, path).send().await?.error_for_status()
     }
 
-    pub fn get_project(&self, path: String) -> reqwest::Result<types::Project> {
+    pub async fn get_project(&self, path: String) -> reqwest::Result<types::Project> {
         let path = urlencoding::encode(&path);
-        self.request(Method::GET, format!("projects/{}", path))?
+        self.request(Method::GET, format!("projects/{}", path))
+            .await?
             .json::<types::Project>()
+            .await
     }
 
     fn exist<T>(&self, resp: reqwest::Result<T>) -> reqwest::Result<Option<T>> {
@@ -57,11 +62,11 @@ impl Client {
         }
     }
 
-    pub fn project_exist(&self, path: String) -> reqwest::Result<Option<types::Project>> {
-        self.exist(self.get_project(path))
+    pub async fn project_exist(&self, path: String) -> reqwest::Result<Option<types::Project>> {
+        self.exist(self.get_project(path).await)
     }
 
-    pub fn get_projects(&self) -> Result<Vec<types::Project>, String> {
+    pub async fn get_projects(&self) -> Result<Vec<types::Project>, String> {
         let mut projects: Vec<types::Project> = vec![];
         let mut next_page = 1;
 
@@ -81,6 +86,7 @@ impl Client {
                 .request(Method::GET, url)
                 .header("Content-Type", "application/json")
                 .send()
+                .await
                 .map_err(|e| e.to_string())?
                 .error_for_status()
                 .map_err(|e| e.to_string())?;
@@ -90,6 +96,7 @@ impl Client {
             projects.append(
                 &mut resp
                     .json::<Vec<types::Project>>()
+                    .await
                     .map_err(|e| e.to_string())?,
             );
 
@@ -112,7 +119,7 @@ impl Client {
         )
     }
 
-    pub fn make_project(
+    pub async fn make_project(
         &self,
         name: String,
         group_id: types::GroupId,
@@ -137,12 +144,14 @@ impl Client {
                 path,
                 namespace_id,
             })
-            .send()?
+            .send()
+            .await?
             .error_for_status()?
             .json::<types::Project>()
+            .await
     }
 
-    pub fn update_project(
+    pub async fn update_project(
         &self,
         project: &types::Project,
         info: &types::Project,
@@ -156,22 +165,26 @@ impl Client {
 
         self.build_request(Method::PUT, format!("projects/{}", project.id))
             .json(&UpdateProjectRequest { description })
-            .send()?
+            .send()
+            .await?
             .error_for_status()?
             .json::<types::Project>()
+            .await
     }
 
-    pub fn get_group(&self, path: String) -> reqwest::Result<types::Group> {
+    pub async fn get_group(&self, path: String) -> reqwest::Result<types::Group> {
         let path = urlencoding::encode(&path);
-        self.request(Method::GET, format!("groups/{}", path))?
+        self.request(Method::GET, format!("groups/{}", path))
+            .await?
             .json::<types::Group>()
+            .await
     }
 
-    pub fn group_exist(&self, path: String) -> reqwest::Result<Option<types::Group>> {
-        self.exist(self.get_group(path))
+    pub async fn group_exist(&self, path: String) -> reqwest::Result<Option<types::Group>> {
+        self.exist(self.get_group(path).await)
     }
 
-    pub fn make_subgroup(
+    pub async fn make_subgroup(
         &self,
         name: String,
         parent_id: types::GroupId,
@@ -191,12 +204,14 @@ impl Client {
                 path,
                 parent_id,
             })
-            .send()?
+            .send()
+            .await?
             .error_for_status()?
             .json::<types::Group>()
+            .await
     }
 
-    pub fn make_project_with_namespace(
+    pub async fn make_project_with_namespace(
         &self,
         mut path: Vec<String>,
         root_group: &types::Group,
@@ -211,18 +226,24 @@ impl Client {
 
         for group_name in path {
             current_namespace = format!("{}/{}", current_namespace, group_name);
-            let group = if let Some(group) = self.group_exist(current_namespace.clone())? {
+            let group = if let Some(group) = self.group_exist(current_namespace.clone()).await? {
                 group
             } else {
-                self.make_subgroup(group_name, parent_id)?
+                self.make_subgroup(group_name, parent_id).await?
             };
 
             parent_id = group.id;
         }
 
-        match self.project_exist(format!("{}/{}", current_namespace, project_name))? {
-            Some(p) => self.update_project(&p, project_info),
-            None => self.make_project(project_name, parent_id, project_info),
+        match self
+            .project_exist(format!("{}/{}", current_namespace, project_name))
+            .await?
+        {
+            Some(p) => self.update_project(&p, project_info).await,
+            None => {
+                self.make_project(project_name, parent_id, project_info)
+                    .await
+            }
         }
     }
 }

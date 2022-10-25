@@ -1,3 +1,4 @@
+use futures::future::join_all;
 use std::fs;
 
 use pbr::ProgressBar;
@@ -33,6 +34,11 @@ impl BackupGitlabOptions {
         let url = Url::parse(&url).map_err(|e| e.to_string())?;
         Ok(Self { url, token, group })
     }
+}
+
+struct BackupData {
+    client: gitlab::Client,
+    group: types::Group,
 }
 
 pub enum FilterPatterns {
@@ -75,7 +81,55 @@ fn filter_projects(
     Ok(projects)
 }
 
-pub fn clone(
+async fn clone_project(
+    project: &types::Project,
+    dst: &str,
+    backup: &Option<BackupData>,
+) -> Result<(), String> {
+    debug!("project path: {}", &project.path_with_namespace);
+
+    let dir_path = project
+        .path_with_namespace
+        .strip_suffix(&project.path)
+        .unwrap();
+    let path = format!("{}/{}", &dst, dir_path);
+    fs::create_dir_all(path).map_err(|e| e.to_string())?;
+
+    git::fetch(
+        project.ssh_url_to_repo.clone(),
+        format!("{}/{}", dst, project.path_with_namespace),
+    )
+    .await?;
+
+    info!("start pushing");
+
+    let (backup_gl, backup_group) = if let Some(backup) = backup {
+        (&backup.client, &backup.group)
+    } else {
+        return Ok(());
+    };
+
+    let path: Vec<String> = project
+        .path_with_namespace
+        .clone()
+        .split('/')
+        .map(str::to_string)
+        .collect();
+
+    let backup_project = backup_gl
+        .make_project_with_namespace(path, backup_group, project)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    git::push_backup(
+        format!("{}/{}", dst, project.path_with_namespace),
+        backup_project.ssh_url_to_repo,
+    )
+    .await
+}
+
+#[tokio::main]
+pub async fn clone(
     fetch: FetchGitlabOptions,
     dst: String,
     backup: Option<BackupGitlabOptions>,
@@ -83,9 +137,10 @@ pub fn clone(
     dry_run: bool,
     objects_per_page: Option<u32>,
     limit: Option<usize>,
+    concurrency_limit: usize,
 ) -> Result<(), String> {
     let fetch_gl = gitlab::Client::new(fetch.token, fetch.url, objects_per_page)?;
-    let mut projects = fetch_gl.get_projects()?;
+    let mut projects = fetch_gl.get_projects().await?;
 
     if let Some(patterns) = patterns {
         projects = filter_projects(projects, patterns, limit)?
@@ -101,61 +156,26 @@ pub fn clone(
         return Ok(());
     }
 
+    let backup_data = if let Some(backup) = backup {
+        let client = gitlab::Client::new(backup.token, backup.url, None)?;
+        let group = client
+            .get_group(backup.group)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        Some(BackupData { client, group })
+    } else {
+        None
+    };
+
     info!("start pulling");
 
     let mut pb = ProgressBar::new(projects.len() as u64);
-    pb.message("Pulling: ");
+    pb.message("Cloning: ");
 
-    for p in &projects {
-        debug!("project path: {}", &p.path_with_namespace);
-
-        let dir_path = p.path_with_namespace.strip_suffix(&p.path).unwrap();
-        let path = format!("{}/{}", &dst, dir_path);
-        fs::create_dir_all(path).map_err(|e| e.to_string())?;
-
-        git::fetch(
-            p.ssh_url_to_repo.clone(),
-            format!("{}/{}", dst, p.path_with_namespace),
-        )?;
-
-        pb.inc();
-    }
-
-    let (backup_gl, backup_group) = if let Some(backup) = backup {
-        (
-            gitlab::Client::new(backup.token, backup.url, None)?,
-            backup.group,
-        )
-    } else {
-        return Ok(());
-    };
-
-    let root_group = backup_gl
-        .get_group(backup_group)
-        .map_err(|e| e.to_string())?;
-
-    info!("start pushing");
-
-    let mut pb = ProgressBar::new(projects.len() as u64);
-    pb.message("Pushing: ");
-
-    for p in projects {
-        let path = p
-            .path_with_namespace
-            .split('/')
-            .map(str::to_string)
-            .collect();
-
-        let backup_project = backup_gl
-            .make_project_with_namespace(path, &root_group, &p)
-            .map_err(|e| e.to_string())?;
-
-        git::push_backup(
-            format!("{}/{}", dst, p.path_with_namespace),
-            backup_project.ssh_url_to_repo,
-        )?;
-
-        pb.inc();
+    for chunk in projects.chunks(concurrency_limit) {
+        join_all(chunk.iter().map(|p| clone_project(p, &dst, &backup_data))).await;
+        pb.add(concurrency_limit as u64);
     }
 
     Ok(())
