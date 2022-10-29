@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use crate::cloner::{clone, BackupGitlabOptions, FetchGitlabOptions, FilterPatterns};
+use crate::cloner::{clone, BackupGitlabOptions, CloneParams, FetchGitlabOptions, FilterPatterns};
 use anyhow::{bail, Result};
 
 #[derive(Parser)]
@@ -98,14 +98,16 @@ pub fn run() -> Result<()> {
         None
     };
 
-    clone(
-        fetch_gl,
-        cli.dst,
-        backup_gl,
+    let clone_params = CloneParams {
+        fetch: fetch_gl,
+        dst: cli.dst,
+        backup: backup_gl,
         patterns,
-        cli.dry_run,
-        cli.objects_per_page,
-        cli.limit,
-        cli.concurrency_limit,
-    )
+        dry_run: cli.dry_run,
+        objects_per_page: cli.objects_per_page,
+        limit: cli.limit,
+        concurrency_limit: cli.concurrency_limit,
+    };
+
+    clone(clone_params)
 }

@@ -128,25 +128,27 @@ async fn clone_project(
     .await
 }
 
+pub struct CloneParams {
+    pub fetch: FetchGitlabOptions,
+    pub dst: String,
+    pub backup: Option<BackupGitlabOptions>,
+    pub patterns: Option<FilterPatterns>,
+    pub dry_run: bool,
+    pub objects_per_page: Option<u32>,
+    pub limit: Option<usize>,
+    pub concurrency_limit: usize,
+}
+
 #[tokio::main]
-pub async fn clone(
-    fetch: FetchGitlabOptions,
-    dst: String,
-    backup: Option<BackupGitlabOptions>,
-    patterns: Option<FilterPatterns>,
-    dry_run: bool,
-    objects_per_page: Option<u32>,
-    limit: Option<usize>,
-    concurrency_limit: usize,
-) -> Result<()> {
-    let fetch_gl = gitlab::Client::new(fetch.token, fetch.url, objects_per_page)?;
+pub async fn clone(p: CloneParams) -> Result<()> {
+    let fetch_gl = gitlab::Client::new(p.fetch.token, p.fetch.url, p.objects_per_page)?;
     let mut projects = fetch_gl.get_projects().await?;
 
-    if let Some(patterns) = patterns {
-        projects = filter_projects(projects, patterns, limit)?
+    if let Some(patterns) = p.patterns {
+        projects = filter_projects(projects, patterns, p.limit)?
     }
 
-    if dry_run {
+    if p.dry_run {
         for p in &projects {
             println!(
                 "{: <32} (id: {}, path: {})",
@@ -156,7 +158,7 @@ pub async fn clone(
         return Ok(());
     }
 
-    let backup_data = if let Some(backup) = backup {
+    let backup_data = if let Some(backup) = p.backup {
         let client = gitlab::Client::new(backup.token, backup.url, None)?;
         let group = client.get_group(backup.group).await?;
 
@@ -170,9 +172,9 @@ pub async fn clone(
     let mut pb = ProgressBar::new(projects.len() as u64);
     pb.message("Cloning: ");
 
-    for chunk in projects.chunks(concurrency_limit) {
-        join_all(chunk.iter().map(|p| clone_project(p, &dst, &backup_data))).await;
-        pb.add(concurrency_limit as u64);
+    for chunk in projects.chunks(p.concurrency_limit) {
+        join_all(chunk.iter().map(|pr| clone_project(pr, &p.dst, &backup_data))).await;
+        pb.add(chunk.len() as u64);
     }
 
     Ok(())
