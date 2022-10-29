@@ -1,6 +1,7 @@
 use clap::Parser;
 
 use crate::cloner::{clone, BackupGitlabOptions, FetchGitlabOptions, FilterPatterns};
+use anyhow::{bail, Result};
 
 #[derive(Parser)]
 #[clap(author, version, about)]
@@ -64,12 +65,12 @@ struct Cli {
     /// Maximum projects to download
     limit: Option<usize>,
 
-    #[clap(long, value_parser, default_value_t=21, value_name = "LIMIT")]
+    #[clap(long, value_parser, default_value_t = 21, value_name = "LIMIT")]
     /// Limit concurrency download
     concurrency_limit: usize,
 }
 
-pub fn run() -> Result<(), String> {
+pub fn run() -> Result<()> {
     let cli = Cli::parse();
 
     let log_level = match cli.verbose {
@@ -84,7 +85,7 @@ pub fn run() -> Result<(), String> {
     let fetch_gl = FetchGitlabOptions::new(cli.fu, cli.ft)?;
 
     let patterns = if cli.exclude.is_some() && cli.include.is_some() {
-        return Err("You cannot use the --include and --exclude flag together".to_string());
+        bail!("You cannot use the --include and --exclude flag together");
     } else if let Some(patterns) = cli.exclude {
         Some(FilterPatterns::Exclude(patterns))
     } else {

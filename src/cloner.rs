@@ -8,6 +8,7 @@ use url::Url;
 
 use crate::gitlab::types;
 use crate::{git, gitlab};
+use anyhow::Result;
 
 #[derive(Debug)]
 pub struct FetchGitlabOptions {
@@ -16,8 +17,8 @@ pub struct FetchGitlabOptions {
 }
 
 impl FetchGitlabOptions {
-    pub fn new(url: String, token: String) -> Result<Self, String> {
-        let url = Url::parse(&url).map_err(|e| e.to_string())?;
+    pub fn new(url: String, token: String) -> Result<Self> {
+        let url = Url::parse(&url)?;
         Ok(Self { url, token })
     }
 }
@@ -30,8 +31,8 @@ pub struct BackupGitlabOptions {
 }
 
 impl BackupGitlabOptions {
-    pub fn new(url: String, token: String, group: String) -> Result<Self, String> {
-        let url = Url::parse(&url).map_err(|e| e.to_string())?;
+    pub fn new(url: String, token: String, group: String) -> Result<Self> {
+        let url = Url::parse(&url)?;
         Ok(Self { url, token, group })
     }
 }
@@ -50,7 +51,7 @@ fn filter_projects(
     projects: Vec<types::Project>,
     patterns: FilterPatterns,
     limit: Option<usize>,
-) -> Result<Vec<types::Project>, String> {
+) -> Result<Vec<types::Project>> {
     let (filter_bit, patterns) = match patterns {
         FilterPatterns::Include(p) => (true, p),
         FilterPatterns::Exclude(p) => (false, p),
@@ -58,7 +59,7 @@ fn filter_projects(
 
     let mut filters: Vec<Regex> = vec![];
     for f in patterns {
-        filters.push(Regex::new(&f).map_err(|e| e.to_string())?);
+        filters.push(Regex::new(&f)?);
     }
 
     let filter_func = |project: &types::Project| -> bool {
@@ -85,7 +86,7 @@ async fn clone_project(
     project: &types::Project,
     dst: &str,
     backup: &Option<BackupData>,
-) -> Result<(), String> {
+) -> Result<()> {
     debug!("project path: {}", &project.path_with_namespace);
 
     let dir_path = project
@@ -93,7 +94,7 @@ async fn clone_project(
         .strip_suffix(&project.path)
         .unwrap();
     let path = format!("{}/{}", &dst, dir_path);
-    fs::create_dir_all(path).map_err(|e| e.to_string())?;
+    fs::create_dir_all(path)?;
 
     git::fetch(
         project.ssh_url_to_repo.clone(),
@@ -118,8 +119,7 @@ async fn clone_project(
 
     let backup_project = backup_gl
         .make_project_with_namespace(path, backup_group, project)
-        .await
-        .map_err(|e| e.to_string())?;
+        .await?;
 
     git::push_backup(
         format!("{}/{}", dst, project.path_with_namespace),
@@ -138,7 +138,7 @@ pub async fn clone(
     objects_per_page: Option<u32>,
     limit: Option<usize>,
     concurrency_limit: usize,
-) -> Result<(), String> {
+) -> Result<()> {
     let fetch_gl = gitlab::Client::new(fetch.token, fetch.url, objects_per_page)?;
     let mut projects = fetch_gl.get_projects().await?;
 
@@ -158,10 +158,7 @@ pub async fn clone(
 
     let backup_data = if let Some(backup) = backup {
         let client = gitlab::Client::new(backup.token, backup.url, None)?;
-        let group = client
-            .get_group(backup.group)
-            .await
-            .map_err(|e| e.to_string())?;
+        let group = client.get_group(backup.group).await?;
 
         Some(BackupData { client, group })
     } else {
