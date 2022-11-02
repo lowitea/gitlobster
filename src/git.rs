@@ -89,7 +89,7 @@ async fn update(path: &String) -> Result<()> {
 }
 
 async fn add_remote_backup(path: &String, remote: String) -> Result<()> {
-    let _ = git(vec!["-C", path, "remote", "remove", "backup"]);
+    let _ = git(vec!["-C", path, "remote", "remove", "backup"]).await;
     git(vec!["-C", path, "remote", "add", "backup", &remote]).await?;
     Ok(())
 }
