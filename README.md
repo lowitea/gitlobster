@@ -48,4 +48,6 @@ gitlobster -t token -u url DESTINATION_DIR
 - [x] Add per-page-for-fetch option
 - [x] Add parallel cloning
 - [ ] Add cloning by http(s)
-- [ ] Add tests
+- [x] Add tests
+- [ ] Add download only user project
+- [x] Add github actions

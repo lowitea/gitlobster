@@ -62,7 +62,7 @@ impl Client {
         self.exist(self.get_project(path).await)
     }
 
-    pub async fn get_projects(&self) -> Result<Vec<types::Project>> {
+    pub async fn get_projects(&self, only_owned: bool) -> Result<Vec<types::Project>> {
         let mut projects: Vec<types::Project> = vec![];
         let mut next_page = 1;
 
@@ -71,7 +71,7 @@ impl Client {
             url.set_path(&format!("{}/{}", url.path(), "projects"));
 
             let query = url.query().expect("query is empty");
-            let new_query = format!("{}&{}={}", query, "page", next_page);
+            let new_query = format!("{}&{}={}&owned={}", query, "page", next_page, only_owned);
             url.set_query(Some(&new_query));
 
             let resp = self
@@ -100,7 +100,7 @@ impl Client {
     fn make_project_description(new_description: Option<String>) -> String {
         format!(
             "{} 🦞 Synced: {}",
-            new_description.unwrap_or("".to_string()),
+            new_description.unwrap_or_else(|| "".to_string()),
             Utc::now()
         )
     }

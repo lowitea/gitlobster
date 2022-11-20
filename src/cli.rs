@@ -68,6 +68,10 @@ struct Cli {
     #[clap(long, value_parser, default_value_t = 21, value_name = "LIMIT")]
     /// Limit concurrency download
     concurrency_limit: usize,
+
+    #[clap(long)]
+    /// Download projects explicitly owned by user
+    only_owned: bool,
 }
 
 pub fn run() -> Result<()> {
@@ -107,6 +111,7 @@ pub fn run() -> Result<()> {
         objects_per_page: cli.objects_per_page,
         limit: cli.limit,
         concurrency_limit: cli.concurrency_limit,
+        only_owned: cli.only_owned,
     };
 
     clone(clone_params)

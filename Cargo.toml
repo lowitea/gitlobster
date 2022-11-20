@@ -21,6 +21,10 @@ tokio = { version = "1", features = ["full"] }
 futures = "0.3"
 anyhow = "1"
 
+[dev-dependencies]
+subprocess = "0.2"
+uuid = { version = "1", features = ["v4", "fast-rng"] }
+
 [profile]
 [profile.release]
 lto = true

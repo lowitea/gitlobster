@@ -1,5 +1,6 @@
 pub use client::Client;
 
 pub mod client;
-pub mod types;
 mod macros;
+
+pub mod types;
