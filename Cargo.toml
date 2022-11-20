@@ -25,6 +25,9 @@ anyhow = "1"
 subprocess = "0.2"
 uuid = { version = "1", features = ["v4", "fast-rng"] }
 
+[features]
+integration_tests = []
+
 [profile]
 [profile.release]
 lto = true
