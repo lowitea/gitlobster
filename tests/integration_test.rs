@@ -141,12 +141,12 @@ mod tests {
         let id = Uuid::new_v4().to_string();
         let data = format!(
             r#"{{
-        "branch": "branch2",
-        "author_email": "me@gitlobster.sea",
-        "author_name": "Mr. Gitlobster",
-        "content": "{}",
-        "commit_message": "update"
-    }}"#,
+                "branch": "branch2",
+                "author_email": "me@gitlobster.sea",
+                "author_name": "Mr. Gitlobster",
+                "content": "{}",
+                "commit_message": "update"
+            }}"#,
             id
         );
         rqw::Client::new()
