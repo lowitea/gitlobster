@@ -2,7 +2,7 @@ on:
   - pull_request
   - push
 
-name: Lint check
+name: Tests
 jobs:
   pre_job:
     # continue-on-error: true # Uncomment once integration is finished
@@ -66,8 +66,4 @@ jobs:
           toolchain: stable
           override: true
       - name: Run tests
-        # temporarily disabling integration tests
-        # run: cargo test --features=integration_tests
         run: cargo test
-        env:
-          GTLBSTR_TEST_GITLAB_TOKEN: ${{ secrets.GTLBSTR_TEST_GITLAB_TOKEN }}
