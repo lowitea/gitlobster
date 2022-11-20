@@ -6,8 +6,8 @@ use std::fmt::{self, Display, Formatter};
 use std::str::FromStr;
 
 use chrono::{DateTime, NaiveDate, Utc};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde::de::{DeserializeOwned, Error};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use serde_json::{self, Value};
 
 use crate::gitlab::macros::impl_id;
@@ -832,8 +832,8 @@ impl Serialize for AccessLevel {
 
 impl<'de> Deserialize<'de> for AccessLevel {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         Ok(<u64 as Deserialize>::deserialize(deserializer)?.into())
     }
@@ -1668,8 +1668,8 @@ impl Serialize for IssueReference {
 
 impl<'de> Deserialize<'de> for IssueReference {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-        where
-            D: Deserializer<'de>,
+    where
+        D: Deserializer<'de>,
     {
         let val = <Value as Deserialize>::deserialize(deserializer)?;
 
@@ -2236,26 +2236,22 @@ impl Note {
     /// The ID of the entity the note is attached to.
     pub fn noteable_id(&self) -> Option<NoteableId> {
         match self.noteable_type {
-            NoteType::Commit => {
-                self.noteable_id
-                    .as_str()
-                    .map(|id| NoteableId::Commit(ObjectId::new(id)))
-            }
-            NoteType::Issue => {
-                self.noteable_id
-                    .as_u64()
-                    .map(|id| NoteableId::Issue(IssueId::new(id)))
-            }
-            NoteType::MergeRequest => {
-                self.noteable_id
-                    .as_u64()
-                    .map(|id| NoteableId::MergeRequest(MergeRequestId::new(id)))
-            }
-            NoteType::Snippet => {
-                self.noteable_id
-                    .as_u64()
-                    .map(|id| NoteableId::Snippet(SnippetId::new(id)))
-            }
+            NoteType::Commit => self
+                .noteable_id
+                .as_str()
+                .map(|id| NoteableId::Commit(ObjectId::new(id))),
+            NoteType::Issue => self
+                .noteable_id
+                .as_u64()
+                .map(|id| NoteableId::Issue(IssueId::new(id))),
+            NoteType::MergeRequest => self
+                .noteable_id
+                .as_u64()
+                .map(|id| NoteableId::MergeRequest(MergeRequestId::new(id))),
+            NoteType::Snippet => self
+                .noteable_id
+                .as_u64()
+                .map(|id| NoteableId::Snippet(SnippetId::new(id))),
         }
     }
 
@@ -2264,18 +2260,16 @@ impl Note {
     pub fn noteable_iid(&self) -> Option<NoteableInternalId> {
         match self.noteable_type {
             NoteType::Commit => None,
-            NoteType::Issue => {
-                self.noteable_iid
-                    .as_ref()
-                    .and_then(|value| value.as_u64())
-                    .map(|id| NoteableInternalId::Issue(IssueInternalId::new(id)))
-            }
-            NoteType::MergeRequest => {
-                self.noteable_iid
-                    .as_ref()
-                    .and_then(|value| value.as_u64())
-                    .map(|id| NoteableInternalId::MergeRequest(MergeRequestInternalId::new(id)))
-            }
+            NoteType::Issue => self
+                .noteable_iid
+                .as_ref()
+                .and_then(|value| value.as_u64())
+                .map(|id| NoteableInternalId::Issue(IssueInternalId::new(id))),
+            NoteType::MergeRequest => self
+                .noteable_iid
+                .as_ref()
+                .and_then(|value| value.as_u64())
+                .map(|id| NoteableInternalId::MergeRequest(MergeRequestInternalId::new(id))),
             NoteType::Snippet => None,
         }
     }
@@ -2555,31 +2549,26 @@ impl Event {
     /// The ID of an event's target.
     pub fn target_id(&self) -> Option<EventTargetId> {
         match self.target_type {
-            EventTargetType::Commit => {
-                self.target_id
-                    .as_str()
-                    .map(|id| EventTargetId::Commit(ObjectId(id.into())))
-            }
-            EventTargetType::Issue => {
-                self.target_id
-                    .as_u64()
-                    .map(|id| EventTargetId::Issue(IssueId(id)))
-            }
-            EventTargetType::MergeRequest => {
-                self.target_id
-                    .as_u64()
-                    .map(|id| EventTargetId::MergeRequest(MergeRequestId(id)))
-            }
-            EventTargetType::Snippet => {
-                self.target_id
-                    .as_u64()
-                    .map(|id| EventTargetId::Snippet(SnippetId(id)))
-            }
-            EventTargetType::ProjectSnippet => {
-                self.target_id
-                    .as_u64()
-                    .map(|id| EventTargetId::Snippet(SnippetId(id)))
-            }
+            EventTargetType::Commit => self
+                .target_id
+                .as_str()
+                .map(|id| EventTargetId::Commit(ObjectId(id.into()))),
+            EventTargetType::Issue => self
+                .target_id
+                .as_u64()
+                .map(|id| EventTargetId::Issue(IssueId(id))),
+            EventTargetType::MergeRequest => self
+                .target_id
+                .as_u64()
+                .map(|id| EventTargetId::MergeRequest(MergeRequestId(id))),
+            EventTargetType::Snippet => self
+                .target_id
+                .as_u64()
+                .map(|id| EventTargetId::Snippet(SnippetId(id))),
+            EventTargetType::ProjectSnippet => self
+                .target_id
+                .as_u64()
+                .map(|id| EventTargetId::Snippet(SnippetId(id))),
         }
     }
 }
@@ -2831,16 +2820,12 @@ impl ResourceLabelEvent {
     /// Returns the id of the merge request or issue that this event is from
     pub fn event_target(&self) -> Option<ResourceLabelEventTarget> {
         match self.resource_type.as_ref() {
-            "MergeRequest" => {
-                Some(ResourceLabelEventTarget::MergeRequest(MergeRequestId::new(
-                    self.resource_id,
-                )))
-            }
-            "Issue" => {
-                Some(ResourceLabelEventTarget::Issue(IssueId::new(
-                    self.resource_id,
-                )))
-            }
+            "MergeRequest" => Some(ResourceLabelEventTarget::MergeRequest(MergeRequestId::new(
+                self.resource_id,
+            ))),
+            "Issue" => Some(ResourceLabelEventTarget::Issue(IssueId::new(
+                self.resource_id,
+            ))),
             _ => None,
         }
     }
