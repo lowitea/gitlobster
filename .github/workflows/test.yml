@@ -60,7 +60,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features
 
-  tests:
+  unit_tests:
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
