@@ -1,6 +1,8 @@
 on:
-  - pull_request
-  - push
+  push:
+    branches:
+      - master
+  pull_request:
 
 name: Tests
 jobs:
@@ -15,7 +17,7 @@ jobs:
         uses: fkirc/skip-duplicate-actions@master
         with:
           # All of these options are optional, so you can remove them if you are happy with the defaults
-          skip_after_successful_duplicate: 'true'
+          skip_after_successful_duplicate: "true"
           paths_ignore: '["**/*.md"]'
 
   fmt_check:
