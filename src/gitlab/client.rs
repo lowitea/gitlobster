@@ -101,7 +101,7 @@ impl Client {
         format!(
             "{} 🦞 Synced: {}",
             new_description.unwrap_or_else(|| "".to_string()),
-            Utc::now()
+            Utc::now().to_rfc3339()
         )
     }
 

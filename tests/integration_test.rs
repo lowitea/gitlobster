@@ -1,8 +1,11 @@
 #[cfg(feature = "integration_tests")]
 mod tests {
+    use chrono::{DateTime, Utc};
     use reqwest::blocking as rqw;
+    use serde::Deserialize;
     use std::fs::{self, File};
     use std::io::Read;
+    use std::vec;
     use subprocess::{Exec, ExitStatus};
     use uuid::Uuid;
 
@@ -48,57 +51,53 @@ mod tests {
         Exec::shell(git_cmd).join().unwrap();
     }
 
-    fn check_backup(gitlab_token: &str, updated_data: Option<&String>) {
+    fn check_backup(start_time: DateTime<Utc>, gitlab_token: &str, updated_data: Option<&String>) {
         println!("Check backup");
-        let prefix = "gitlobster_test%2Fupload%2Fgitlobster_test%2Fdownload";
+
+        #[derive(Deserialize)]
+        struct Project {
+            description: String,
+        }
+
+        let url_prefix = format!("{}api/v4/projects", GITLAB_HOST);
+        let project_path = "gitlobster_test%2Fupload%2Fgitlobster_test%2Fdownload";
+        let p1_name = format!("{}%2Fproject_1", project_path);
+        let p2_name = format!("{}%2Fproject_2", project_path);
+        let p3_name = format!("{}%2Fsubgroup_1%2Fproject_3", project_path);
         let mut files = vec![
-            (
-                format!("{}%2Fproject_1", prefix),
-                "branch1",
-                "project_1",
-                "branch1",
-            ),
-            (
-                format!("{}%2Fproject_1", prefix),
-                "branch2",
-                "project_1",
-                "branch2",
-            ),
-            (
-                format!("{}%2Fproject_2", prefix),
-                "main",
-                "project_2",
-                "main",
-            ),
-            (
-                format!("{}%2Fsubgroup_1%2Fproject_3", prefix),
-                "main",
-                "project_3",
-                "main",
-            ),
+            (&p1_name, "branch1", "project_1", "branch1"),
+            (&p1_name, "branch2", "project_1", "branch2"),
+            (&p2_name, "main", "project_2", "main"),
+            (&p3_name, "main", "project_3", "main"),
         ];
 
         // check updated file if need
         if let Some(data) = updated_data {
-            files.push((
-                format!("{}%2Fproject_1", prefix),
-                "branch2",
-                "updating",
-                data,
-            ));
+            files.push((&p1_name, "branch2", "updating", data));
         };
 
         let client = rqw::Client::new();
         for (project, branch, file, data) in files {
             let url = format!(
-                "{}api/v4/projects/{}/repository/files/{}/raw?ref={}&access_token={}",
-                GITLAB_HOST, project, file, branch, gitlab_token
+                "{}/{}/repository/files/{}/raw?ref={}&access_token={}",
+                url_prefix, project, file, branch, gitlab_token
             );
             let resp = client.get(url).send().unwrap().error_for_status().unwrap();
             let content = resp.text().unwrap();
             let content = content.trim();
             println!("content: {}, expected: {}", content, data);
             assert!(content == data);
+        }
+
+        // check description
+        let projects = vec![p1_name, p2_name, p3_name];
+        for project in projects {
+            let url = format!("{}/{}?access_token={}", url_prefix, project, gitlab_token);
+            let resp = client.get(url).send().unwrap().error_for_status().unwrap();
+            let p = resp.json::<Project>().unwrap();
+            let d_time_str = p.description.split(" 🦞 Synced: ").last().unwrap();
+            let d_time = DateTime::parse_from_rfc3339(d_time_str).unwrap();
+            assert!(d_time >= start_time);
         }
     }
 
@@ -113,7 +112,7 @@ mod tests {
         let _ = rqw::Client::new().delete(url).send();
     }
 
-    fn run_cmd(gitlab_token: &str) -> ExitStatus {
+    fn run_gitlobster(gitlab_token: &str) -> ExitStatus {
         Exec::shell(format!(
             "cargo run -- \
         --ft={} \
@@ -167,20 +166,22 @@ mod tests {
 
         cleanup(gitlab_token);
 
-        let exit_status = run_cmd(gitlab_token);
+        let start_time = Utc::now();
+        let exit_status = run_gitlobster(gitlab_token);
         assert!(exit_status.success());
 
         check_local(None);
-        check_backup(gitlab_token, None);
+        check_backup(start_time, gitlab_token, None);
 
         println!("check updating project");
         let expected = update_remote_project(gitlab_token);
 
-        let exit_status = run_cmd(gitlab_token);
+        let start_time = Utc::now();
+        let exit_status = run_gitlobster(gitlab_token);
         assert!(exit_status.success());
 
         check_local(Some(&expected));
-        check_backup(gitlab_token, Some(&expected));
+        check_backup(start_time, gitlab_token, Some(&expected));
 
         cleanup(gitlab_token);
     }
