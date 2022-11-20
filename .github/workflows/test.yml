@@ -66,6 +66,8 @@ jobs:
           toolchain: stable
           override: true
       - name: Run tests
-        run: cargo test --features=integration_tests
+        # temporarily disabling integration tests
+        # run: cargo test --features=integration_tests
+        run: cargo test
         env:
           GTLBSTR_TEST_GITLAB_TOKEN: ${{ secrets.GTLBSTR_TEST_GITLAB_TOKEN }}
