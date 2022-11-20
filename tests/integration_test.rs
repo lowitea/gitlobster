@@ -170,6 +170,22 @@ mod tests {
         let exit_status = run_cmd(gitlab_token);
         assert!(exit_status.success());
 
+        // DEBUG
+        let dirs = vec![
+            "/tmp",
+            "/tmp/gitlobster",
+            "/tmp/gitlobster/tests",
+            "/tmp/gitlobster/tests/test_out",
+        ];
+        for dir in dirs {
+            println!("DIR: {}", dir);
+            let paths = fs::read_dir("/tmp").unwrap();
+            for path in paths {
+                println!("SUBDIR: {}", path.unwrap().path().display())
+            }
+        }
+        // DEBUG END
+
         check_local(None);
         check_backup(gitlab_token, None);
 
