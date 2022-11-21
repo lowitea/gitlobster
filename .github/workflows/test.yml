@@ -58,7 +58,9 @@ jobs:
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
+          args: --all-features --all-targets
+        env:
+          GTLBSTR_TEST_GITLAB_TOKEN: ""
 
   unit_tests:
     needs: pre_job
