@@ -49,5 +49,5 @@ gitlobster -t token -u url DESTINATION_DIR
 - [x] Add parallel cloning
 - [ ] Add cloning by http(s)
 - [x] Add tests
-- [ ] Add download only user project
+- [x] Add download only user project
 - [x] Add github actions

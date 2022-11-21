@@ -138,12 +138,15 @@ pub struct CloneParams {
     pub limit: Option<usize>,
     pub concurrency_limit: usize,
     pub only_owned: bool,
+    pub only_membership: bool,
 }
 
 #[tokio::main]
 pub async fn clone(p: CloneParams) -> Result<()> {
     let fetch_gl = gitlab::Client::new(p.fetch.token, p.fetch.url, p.objects_per_page)?;
-    let mut projects = fetch_gl.get_projects(p.only_owned).await?;
+    let mut projects = fetch_gl
+        .get_projects(p.only_owned, p.only_membership)
+        .await?;
 
     if let Some(patterns) = p.patterns {
         projects = filter_projects(projects, patterns, p.limit)?

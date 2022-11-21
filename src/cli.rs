@@ -72,6 +72,10 @@ struct Cli {
     #[clap(long)]
     /// Download projects explicitly owned by user
     only_owned: bool,
+
+    #[clap(long)]
+    /// Download only user's projects
+    only_membership: bool,
 }
 
 pub fn run() -> Result<()> {
@@ -112,6 +116,7 @@ pub fn run() -> Result<()> {
         limit: cli.limit,
         concurrency_limit: cli.concurrency_limit,
         only_owned: cli.only_owned,
+        only_membership: cli.only_membership,
     };
 
     clone(clone_params)

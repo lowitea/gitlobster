@@ -62,7 +62,11 @@ impl Client {
         self.exist(self.get_project(path).await)
     }
 
-    pub async fn get_projects(&self, only_owned: bool) -> Result<Vec<types::Project>> {
+    pub async fn get_projects(
+        &self,
+        only_owned: bool,
+        only_membership: bool,
+    ) -> Result<Vec<types::Project>> {
         let mut projects: Vec<types::Project> = vec![];
         let mut next_page = 1;
 
@@ -70,9 +74,15 @@ impl Client {
             let mut url = self.url.clone();
             url.set_path(&format!("{}/{}", url.path(), "projects"));
 
-            let query = url.query().expect("query is empty");
-            let new_query = format!("{}&{}={}&owned={}", query, "page", next_page, only_owned);
-            url.set_query(Some(&new_query));
+            let mut query = url.query().expect("query is empty").to_string();
+            query += format!("&page={}", next_page).as_str();
+            if only_owned {
+                query += "&owned=true"
+            }
+            if only_membership {
+                query += "&only_membership=true"
+            }
+            url.set_query(Some(&query));
 
             let resp = self
                 .http
