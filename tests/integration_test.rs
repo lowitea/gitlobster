@@ -142,7 +142,7 @@ mod tests {
         let data = format!(
             r#"{{
                 "branch": "branch2",
-                "author_email": "me@gitlobster.sea",
+                "author_email": "gitlobster@lowit.ru",
                 "author_name": "Mr. Gitlobster",
                 "content": "{}",
                 "commit_message": "update"
