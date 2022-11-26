@@ -59,7 +59,7 @@ async fn update(path: &String) -> Result<()> {
     let mut default_branch = "";
 
     for b in branches {
-        if b.starts_with(&remote_prefix) {
+        if b.starts_with(remote_prefix) {
             remote_branches.push(b);
             continue;
         }
@@ -75,7 +75,7 @@ async fn update(path: &String) -> Result<()> {
 
     for b in remote_branches {
         let local_branch_name = b
-            .strip_prefix(&remote_prefix)
+            .strip_prefix(remote_prefix)
             .expect("situation is unreachable");
 
         if !b.ends_with(&default_branch) {
