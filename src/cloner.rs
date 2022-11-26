@@ -40,6 +40,7 @@ impl BackupGitlabOptions {
 struct BackupData {
     client: gitlab::Client,
     group: types::Group,
+    git_http_auth: Option<String>,
 }
 
 pub enum FilterPatterns {
@@ -82,9 +83,22 @@ fn filter_projects(
     Ok(projects)
 }
 
+fn make_git_path(project: &types::Project, git_http_auth: &Option<String>) -> String {
+    if let Some(auth) = git_http_auth {
+        let parts: Vec<&str> = project.http_url_to_repo.split("://").collect();
+        if parts.len() != 2 {
+            panic!("project with incorrect http path")
+        }
+        format!("{}://{}@{}", parts[0], auth, parts[1])
+    } else {
+        project.ssh_url_to_repo.clone()
+    }
+}
+
 async fn clone_project(
     project: &types::Project,
     dst: &str,
+    fetch_git_http_auth: &Option<String>,
     backup: &Option<BackupData>,
 ) -> Result<()> {
     debug!("project path: {}", &project.path_with_namespace);
@@ -96,16 +110,13 @@ async fn clone_project(
     let path = format!("{}/{}", &dst, dir_path);
     fs::create_dir_all(path)?;
 
-    git::fetch(
-        project.ssh_url_to_repo.clone(),
-        format!("{}/{}", dst, project.path_with_namespace),
-    )
-    .await?;
+    let src = make_git_path(project, fetch_git_http_auth);
+    git::fetch(src, format!("{}/{}", dst, project.path_with_namespace)).await?;
 
     info!("start pushing");
 
-    let (backup_gl, backup_group) = if let Some(backup) = backup {
-        (&backup.client, &backup.group)
+    let (backup_gl, backup_group, backup_git_http_auth) = if let Some(backup) = backup {
+        (&backup.client, &backup.group, &backup.git_http_auth)
     } else {
         return Ok(());
     };
@@ -121,11 +132,13 @@ async fn clone_project(
         .make_project_with_namespace(path, backup_group, project)
         .await?;
 
-    git::push_backup(
-        format!("{}/{}", dst, project.path_with_namespace),
-        backup_project.ssh_url_to_repo,
-    )
-    .await
+    let remote = make_git_path(&backup_project, backup_git_http_auth);
+    git::push_backup(format!("{}/{}", dst, project.path_with_namespace), remote).await
+}
+
+async fn make_git_http_auth(client: &gitlab::Client, token: &str) -> Result<String> {
+    let user = client.get_current_user().await?;
+    Ok(format!("{}:{}", user.username, token))
 }
 
 pub struct CloneParams {
@@ -139,11 +152,13 @@ pub struct CloneParams {
     pub concurrency_limit: usize,
     pub only_owned: bool,
     pub only_membership: bool,
+    pub download_ssh: bool,
+    pub upload_ssh: bool,
 }
 
 #[tokio::main]
 pub async fn clone(p: CloneParams) -> Result<()> {
-    let fetch_gl = gitlab::Client::new(p.fetch.token, p.fetch.url, p.objects_per_page)?;
+    let fetch_gl = gitlab::Client::new(&p.fetch.token, p.fetch.url, p.objects_per_page)?;
     let mut projects = fetch_gl
         .get_projects(p.only_owned, p.only_membership)
         .await?;
@@ -163,12 +178,27 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     }
 
     let backup_data = if let Some(backup) = p.backup {
-        let client = gitlab::Client::new(backup.token, backup.url, None)?;
+        let client = gitlab::Client::new(&backup.token, backup.url, None)?;
         let group = client.get_group(backup.group).await?;
+        let git_http_auth = if p.upload_ssh {
+            None
+        } else {
+            Some(make_git_http_auth(&client, &backup.token).await?)
+        };
 
-        Some(BackupData { client, group })
+        Some(BackupData {
+            client,
+            group,
+            git_http_auth,
+        })
     } else {
         None
+    };
+
+    let fetch_git_http_auth = if p.download_ssh {
+        None
+    } else {
+        Some(make_git_http_auth(&fetch_gl, &p.fetch.token).await?)
     };
 
     info!("start pulling");
@@ -180,7 +210,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
         join_all(
             chunk
                 .iter()
-                .map(|pr| clone_project(pr, &p.dst, &backup_data)),
+                .map(|pr| clone_project(pr, &p.dst, &fetch_git_http_auth, &backup_data)),
         )
         .await;
         pb.add(chunk.len() as u64);

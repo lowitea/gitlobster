@@ -76,6 +76,14 @@ struct Cli {
     #[clap(long)]
     /// Download only user's projects
     only_membership: bool,
+
+    /// Enable download by ssh instead of http. An authorized ssh key is required
+    #[clap(long)]
+    download_ssh: bool,
+
+    /// Enable upload by ssh instead of http. An authorized ssh key is required
+    #[clap(long)]
+    upload_ssh: bool,
 }
 
 pub fn run() -> Result<()> {
@@ -117,6 +125,8 @@ pub fn run() -> Result<()> {
         concurrency_limit: cli.concurrency_limit,
         only_owned: cli.only_owned,
         only_membership: cli.only_membership,
+        download_ssh: cli.download_ssh,
+        upload_ssh: cli.upload_ssh,
     };
 
     clone(clone_params)

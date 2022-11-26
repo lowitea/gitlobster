@@ -13,7 +13,7 @@ pub struct Client {
 }
 
 impl Client {
-    pub fn new(token: String, mut url: Url, opp: Option<u32>) -> Result<Self> {
+    pub fn new(token: &str, mut url: Url, opp: Option<u32>) -> Result<Self> {
         let http = reqwest::Client::new();
         let opp = if let Some(opp) = opp { opp } else { 1000 };
 
@@ -110,7 +110,7 @@ impl Client {
     fn make_project_description(new_description: Option<String>) -> String {
         format!(
             "{} 🦞 Synced: {}",
-            new_description.unwrap_or_else(|| "".to_string()),
+            new_description.unwrap_or_default(),
             Utc::now().to_rfc3339()
         )
     }
@@ -241,5 +241,12 @@ impl Client {
                     .await
             }
         }
+    }
+
+    pub async fn get_current_user(&self) -> reqwest::Result<types::User> {
+        self.request(Method::GET, "user")
+            .await?
+            .json::<types::User>()
+            .await
     }
 }

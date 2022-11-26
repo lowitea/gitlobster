@@ -13,14 +13,14 @@ mod tests {
     const GITLAB_HOST: &str = "https://gitlab.com/";
 
     fn check_local(updated_data: Option<&String>) {
-        println!("Check local dir");
+        println!("-- check local dir");
         fn check_file_data(path: String, data: &str) {
             let mut file = File::open(path).unwrap();
             let mut content = String::new();
             file.read_to_string(&mut content).unwrap();
 
             let content = content.trim();
-            println!("content: {}, expected: {}", content, data);
+            println!("-- content: {}, expected: {}", content, data);
             assert!(content.trim() == data);
         }
 
@@ -52,7 +52,7 @@ mod tests {
     }
 
     fn check_backup(start_time: DateTime<Utc>, gitlab_token: &str, updated_data: Option<&String>) {
-        println!("Check backup");
+        println!("-- check backup");
 
         #[derive(Deserialize)]
         struct Project {
@@ -85,7 +85,7 @@ mod tests {
             let resp = client.get(url).send().unwrap().error_for_status().unwrap();
             let content = resp.text().unwrap();
             let content = content.trim();
-            println!("content: {}, expected: {}", content, data);
+            println!("-- content: {}, expected: {}", content, data);
             assert!(content == data);
         }
 
@@ -102,7 +102,7 @@ mod tests {
     }
 
     fn cleanup(gitlab_token: &str) {
-        println!("Cleanup test objects");
+        println!("-- cleanup test objects");
 
         let _ = fs::remove_dir_all(OUT_DIR);
         let url = format!(
@@ -112,23 +112,25 @@ mod tests {
         let _ = rqw::Client::new().delete(url).send();
     }
 
-    fn run_gitlobster(gitlab_token: &str) -> ExitStatus {
-        Exec::shell(format!(
+    fn run_gitlobster(gitlab_token: &str, enable_ssh: bool) -> ExitStatus {
+        let mut cmd = format!(
             "cargo run -- \
-        --ft={} \
-        --fu={} \
-        --bt={} \
-        --bu={} \
-        --bg=gitlobster_test/upload \
-        --only-owned \
-        --include='^gitlobster_test/download' \
-        --concurrency-limit=1 \
-        -vv \
-        {}",
-            gitlab_token, GITLAB_HOST, gitlab_token, GITLAB_HOST, OUT_DIR,
-        ))
-        .join()
-        .unwrap()
+            --ft={} \
+            --fu={} \
+            --bt={} \
+            --bu={} \
+            --bg=gitlobster_test/upload \
+            --only-owned \
+            --include='^gitlobster_test/download' \
+            --concurrency-limit=1 \
+            -vv",
+            gitlab_token, GITLAB_HOST, gitlab_token, GITLAB_HOST,
+        );
+        if enable_ssh {
+            cmd = format!("{} --download-ssh --upload-ssh", cmd)
+        }
+        cmd = format!("{} {}", cmd, OUT_DIR);
+        Exec::shell(cmd).join().unwrap()
     }
 
     fn update_remote_project(gitlab_token: &str) -> String {
@@ -165,23 +167,36 @@ mod tests {
         let gitlab_token = env!("GTLBSTR_TEST_GITLAB_TOKEN");
 
         cleanup(gitlab_token);
-
+        
+        println!("-- check first run");
+        
         let start_time = Utc::now();
-        let exit_status = run_gitlobster(gitlab_token);
+        let exit_status = run_gitlobster(gitlab_token, false);
         assert!(exit_status.success());
 
         check_local(None);
         check_backup(start_time, gitlab_token, None);
 
-        println!("check updating project");
+        println!("-- check updating project");
         let expected = update_remote_project(gitlab_token);
 
         let start_time = Utc::now();
-        let exit_status = run_gitlobster(gitlab_token);
+        let exit_status = run_gitlobster(gitlab_token, false);
         assert!(exit_status.success());
 
         check_local(Some(&expected));
         check_backup(start_time, gitlab_token, Some(&expected));
+
+        cleanup(gitlab_token);
+
+        println!("-- check cloning by ssh");
+
+        let start_time = Utc::now();
+        let exit_status = run_gitlobster(gitlab_token, true);
+        assert!(exit_status.success());
+
+        check_local(None);
+        check_backup(start_time, gitlab_token, None);
 
         cleanup(gitlab_token);
     }
