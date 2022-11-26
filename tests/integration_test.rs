@@ -167,9 +167,9 @@ mod tests {
         let gitlab_token = env!("GTLBSTR_TEST_GITLAB_TOKEN");
 
         cleanup(gitlab_token);
-        
+
         println!("-- check first run");
-        
+
         let start_time = Utc::now();
         let exit_status = run_gitlobster(gitlab_token, false);
         assert!(exit_status.success());
