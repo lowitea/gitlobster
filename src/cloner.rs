@@ -188,16 +188,6 @@ pub async fn clone(p: CloneParams) -> Result<()> {
         clear_dst(&dst)
     }
 
-    if p.dry_run {
-        for p in &projects {
-            println!(
-                "{: <32} (id: {}, path: {})",
-                p.name, p.id, p.path_with_namespace
-            );
-        }
-        return Ok(());
-    }
-
     let backup_data = if let Some(backup) = p.backup {
         let client = gitlab::Client::new(&backup.token, backup.url, None)?;
         let group = client.get_group(backup.group).await?;
@@ -221,6 +211,25 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     } else {
         Some(make_git_http_auth(&fetch_gl, &p.fetch.token).await?)
     };
+
+    if p.dry_run {
+        if let Some(backup_data) = &backup_data {
+            let g = &backup_data.group;
+            println!(
+                "Backup group:   {} (id: {}, path: {})",
+                g.name, g.id, g.full_path
+            );
+        }
+        println!("Local out dir: {}", &dst);
+        println!();
+        for p in &projects {
+            println!(
+                "{: <32} (id: {}, path: {})",
+                p.name, p.id, p.path_with_namespace
+            );
+        }
+        return Ok(());
+    }
 
     info!("start pulling");
 

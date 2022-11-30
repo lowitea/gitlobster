@@ -54,6 +54,6 @@ gitlobster -t token -u url DESTINATION_DIR
 - [x] Add disable hierarchy option
 - [x] Add out option
 - [x] Allow miltiply include and exclude options
-- [ ] Show result path and additional info on --dry-run option
+- [x] Show result path and additional info on --dry-run option
 - [x] Add option for remove out dir if exist
 - [x] Add save to new temp dir if out not setting
