@@ -100,6 +100,7 @@ async fn clone_project(
     dst: &str,
     fetch_git_http_auth: &Option<String>,
     backup: &Option<BackupData>,
+    disable_hierarchy: bool,
 ) -> Result<()> {
     debug!("project path: {}", &project.path_with_namespace);
 
@@ -111,7 +112,13 @@ async fn clone_project(
     fs::create_dir_all(path)?;
 
     let src = make_git_path(project, fetch_git_http_auth);
-    git::fetch(src, format!("{}/{}", dst, project.path_with_namespace)).await?;
+    let p_path = if disable_hierarchy {
+        &project.path
+    } else {
+        &project.path_with_namespace
+    };
+
+    git::fetch(src, format!("{}/{}", dst, &p_path)).await?;
 
     info!("start pushing");
 
@@ -121,19 +128,23 @@ async fn clone_project(
         return Ok(());
     };
 
-    let path: Vec<String> = project
-        .path_with_namespace
-        .clone()
-        .split('/')
-        .map(str::to_string)
-        .collect();
+    let path: Vec<String> = if disable_hierarchy {
+        vec![p_path.clone()]
+    } else {
+        project
+            .path_with_namespace
+            .clone()
+            .split('/')
+            .map(str::to_string)
+            .collect()
+    };
 
     let backup_project = backup_gl
         .make_project_with_namespace(path, backup_group, project)
         .await?;
 
     let remote = make_git_path(&backup_project, backup_git_http_auth);
-    git::push_backup(format!("{}/{}", dst, project.path_with_namespace), remote).await
+    git::push_backup(format!("{}/{}", dst, p_path), remote).await
 }
 
 async fn make_git_http_auth(client: &gitlab::Client, token: &str) -> Result<String> {
@@ -154,6 +165,7 @@ pub struct CloneParams {
     pub only_membership: bool,
     pub download_ssh: bool,
     pub upload_ssh: bool,
+    pub disable_hierarchy: bool,
 }
 
 #[tokio::main]
@@ -207,11 +219,15 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     pb.message("Cloning: ");
 
     for chunk in projects.chunks(p.concurrency_limit) {
-        join_all(
-            chunk
-                .iter()
-                .map(|pr| clone_project(pr, &p.dst, &fetch_git_http_auth, &backup_data)),
-        )
+        join_all(chunk.iter().map(|pr| {
+            clone_project(
+                pr,
+                &p.dst,
+                &fetch_git_http_auth,
+                &backup_data,
+                p.disable_hierarchy,
+            )
+        }))
         .await;
         pb.add(chunk.len() as u64);
     }

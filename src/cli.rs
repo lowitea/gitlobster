@@ -84,6 +84,10 @@ struct Cli {
     /// Enable upload by ssh instead of http. An authorized ssh key is required
     #[clap(long)]
     upload_ssh: bool,
+
+    /// Disable saving the directory hierarchy
+    #[clap(long)]
+    disable_hierarchy: bool,
 }
 
 pub fn run() -> Result<()> {
@@ -127,6 +131,7 @@ pub fn run() -> Result<()> {
         only_membership: cli.only_membership,
         download_ssh: cli.download_ssh,
         upload_ssh: cli.upload_ssh,
+        disable_hierarchy: cli.disable_hierarchy,
     };
 
     clone(clone_params)
