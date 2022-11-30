@@ -4,89 +4,79 @@ use crate::cloner::{clone, BackupGitlabOptions, CloneParams, FetchGitlabOptions,
 use anyhow::{bail, Result};
 
 #[derive(Parser)]
-#[clap(author, version, about)]
+#[command(author, version, about)]
 /// A tool for cloning all available repositories in a GitLab instance
 struct Cli {
     /// The GitLab instance URL for fetch repositories (example: https://gitlab.local/)
-    #[clap(long, value_parser, value_name = "FETCH URL")]
+    #[arg(long, value_parser, value_name = "FETCH URL")]
     fu: String,
 
     /// Your personal GitLab token for fetch repositories
-    #[clap(long, value_parser, value_name = "FETCH TOKEN")]
+    #[arg(long, value_parser, value_name = "FETCH TOKEN")]
     ft: String,
 
-    #[clap(long, value_parser, value_name = "BACKUP URL")]
+    #[arg(long, value_parser, value_name = "BACKUP URL")]
     /// The GitLab instance URL for backup repositories (example: https://backup-gitlab.local/)
     bu: Option<String>,
 
-    #[clap(long, value_parser, value_name = "BACKUP TOKEN")]
+    #[arg(long, value_parser, value_name = "BACKUP TOKEN")]
     /// Your personal GitLab token for backup repositories
     bt: Option<String>,
 
-    #[clap(long, value_parser, value_name = "BACKUP GROUP")]
+    #[arg(long, value_parser, value_name = "BACKUP GROUP")]
     /// A target created group on backup GitLab for push repositories
     bg: Option<String>,
 
-    #[clap(
-        long,
-        multiple_values = true,
-        value_delimiter = ',',
-        value_name = "PATTERNS"
-    )]
-    /// Comma separated include regexp patterns (cannot be used together with --exclude flag)
+    #[arg(long, value_name = "PATTERN")]
+    /// Include regexp patterns (cannot be used together with --exclude flag, may be repeated)
     include: Option<Vec<String>>,
 
-    #[clap(
-        long,
-        multiple_values = true,
-        value_delimiter = ',',
-        value_name = "PATTERNS"
-    )]
-    /// Comma separated exclude regexp patterns (cannot be used together with --include flag)
+    #[arg(long, value_name = "PATTERN")]
+    /// Comma separated exclude regexp patterns (cannot be used together with --include flag, may be repeated)
     exclude: Option<Vec<String>>,
 
     /// A destination local folder for save downloaded repositories
-    #[clap(long, short, value_parser, value_name = "DIRECTORY")]
+    #[arg(long, short, value_parser, value_name = "DIRECTORY")]
     dst: Option<String>,
 
     /// Verbose level (one or more, max four)
-    #[clap(short, long, action = clap::ArgAction::Count)]
+    #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
-    #[clap(long)]
+    #[arg(long)]
     /// Show all projects to download
     dry_run: bool,
 
-    #[clap(long, value_parser, value_name = "COUNT")]
+    #[arg(long, value_parser, value_name = "COUNT")]
     /// Low-level option, how many projects can fetch in one request
     objects_per_page: Option<u32>,
 
-    #[clap(long, value_parser, value_name = "COUNT")]
+    #[arg(long, value_parser, value_name = "COUNT")]
     /// Maximum projects to download
     limit: Option<usize>,
 
-    #[clap(long, value_parser, default_value_t = 21, value_name = "LIMIT")]
+    #[arg(long, value_parser, default_value_t = 21, value_name = "LIMIT")]
     /// Limit concurrency download
     concurrency_limit: usize,
 
-    #[clap(long)]
+    #[arg(long)]
     /// Download projects explicitly owned by user
     only_owned: bool,
 
-    #[clap(long)]
+    #[arg(long)]
     /// Download only user's projects
     only_membership: bool,
 
     /// Enable download by ssh instead of http. An authorized ssh key is required
-    #[clap(long)]
+    #[arg(long)]
     download_ssh: bool,
 
     /// Enable upload by ssh instead of http. An authorized ssh key is required
-    #[clap(long)]
+    #[arg(long)]
     upload_ssh: bool,
 
     /// Disable saving the directory hierarchy
-    #[clap(long)]
+    #[arg(long)]
     disable_hierarchy: bool,
 }
 
