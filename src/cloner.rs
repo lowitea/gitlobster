@@ -154,6 +154,10 @@ async fn make_git_http_auth(client: &gitlab::Client, token: &str) -> Result<Stri
     Ok(format!("{}:{}", user.username, token))
 }
 
+fn clear_dst(dst: &str) {
+    let _ = std::fs::remove_dir_all(dst);
+}
+
 pub struct CloneParams {
     pub fetch: FetchGitlabOptions,
     pub dst: Option<String>,
@@ -168,6 +172,7 @@ pub struct CloneParams {
     pub download_ssh: bool,
     pub upload_ssh: bool,
     pub disable_hierarchy: bool,
+    pub clear_dst: bool,
 }
 
 #[tokio::main]
@@ -186,6 +191,10 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     } else {
         format!("{}/{}", std::env::temp_dir().display(), TEMP_DIR)
     };
+
+    if p.clear_dst {
+        clear_dst(&dst)
+    }
 
     if p.dry_run {
         for p in &projects {

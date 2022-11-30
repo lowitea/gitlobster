@@ -78,6 +78,10 @@ struct Cli {
     /// Disable saving the directory hierarchy
     #[arg(long)]
     disable_hierarchy: bool,
+
+    /// Clear dst path before cloning
+    #[arg(long)]
+    clear_dst: bool,
 }
 
 pub fn run() -> Result<()> {
@@ -122,6 +126,7 @@ pub fn run() -> Result<()> {
         download_ssh: cli.download_ssh,
         upload_ssh: cli.upload_ssh,
         disable_hierarchy: cli.disable_hierarchy,
+        clear_dst: cli.clear_dst,
     };
 
     clone(clone_params)
