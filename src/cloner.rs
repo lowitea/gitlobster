@@ -1,5 +1,4 @@
 use futures::future::join_all;
-use std::fs;
 
 use pbr::ProgressBar;
 use regex::Regex;
@@ -105,13 +104,6 @@ async fn clone_project(
     disable_hierarchy: bool,
 ) -> Result<()> {
     debug!("project path: {}", &project.path_with_namespace);
-
-    let dir_path = project
-        .path_with_namespace
-        .strip_suffix(&project.path)
-        .unwrap();
-    let path = format!("{}/{}", &dst, dir_path);
-    fs::create_dir_all(path)?;
 
     let src = make_git_path(project, fetch_git_http_auth);
     let p_path = if disable_hierarchy {
