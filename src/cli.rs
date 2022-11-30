@@ -46,8 +46,8 @@ struct Cli {
     exclude: Option<Vec<String>>,
 
     /// A destination local folder for save downloaded repositories
-    #[clap(value_parser, value_name = "DIRECTORY")]
-    dst: String,
+    #[clap(long, short, value_parser, value_name = "DIRECTORY")]
+    dst: Option<String>,
 
     /// Verbose level (one or more, max four)
     #[clap(short, long, action = clap::ArgAction::Count)]

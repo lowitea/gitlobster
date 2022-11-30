@@ -10,6 +10,8 @@ use crate::gitlab::types;
 use crate::{git, gitlab};
 use anyhow::Result;
 
+const TEMP_DIR: &str = "gitlobster";
+
 #[derive(Debug)]
 pub struct FetchGitlabOptions {
     url: Url,
@@ -154,7 +156,7 @@ async fn make_git_http_auth(client: &gitlab::Client, token: &str) -> Result<Stri
 
 pub struct CloneParams {
     pub fetch: FetchGitlabOptions,
-    pub dst: String,
+    pub dst: Option<String>,
     pub backup: Option<BackupGitlabOptions>,
     pub patterns: Option<FilterPatterns>,
     pub dry_run: bool,
@@ -178,6 +180,12 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     if let Some(patterns) = p.patterns {
         projects = filter_projects(projects, patterns, p.limit)?
     }
+
+    let dst = if let Some(dst) = p.dst {
+        dst
+    } else {
+        format!("{}/{}", std::env::temp_dir().display(), TEMP_DIR)
+    };
 
     if p.dry_run {
         for p in &projects {
@@ -222,7 +230,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
         join_all(chunk.iter().map(|pr| {
             clone_project(
                 pr,
-                &p.dst,
+                &dst,
                 &fetch_git_http_auth,
                 &backup_data,
                 p.disable_hierarchy,

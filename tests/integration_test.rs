@@ -123,13 +123,13 @@ mod tests {
             --only-owned \
             --include='^gitlobster_test/download' \
             --concurrency-limit=1 \
+            -d {} \
             -vv",
-            gitlab_token, GITLAB_HOST, gitlab_token, GITLAB_HOST,
+            gitlab_token, GITLAB_HOST, gitlab_token, GITLAB_HOST, OUT_DIR,
         );
         if enable_ssh {
             cmd = format!("{} --download-ssh --upload-ssh", cmd)
         }
-        cmd = format!("{} {}", cmd, OUT_DIR);
         Exec::shell(cmd).join().unwrap()
     }
 
