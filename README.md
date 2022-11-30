@@ -51,3 +51,9 @@ gitlobster -t token -u url DESTINATION_DIR
 - [x] Add tests
 - [x] Add download only user project
 - [x] Add github actions
+- [ ] Add disable hierarchy option
+- [ ] Add out option
+- [ ] Allow miltiply include and exclude options
+- [ ] Show result path and additional info on --dry-run option
+- [ ] Add option for remove out dir if exist
+- [ ] Add save to new temp dir if out not setting
