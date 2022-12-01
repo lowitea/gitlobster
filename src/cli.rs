@@ -8,79 +8,121 @@ use anyhow::{bail, Result};
 /// A tool for cloning all available repositories in a GitLab instance
 struct Cli {
     /// The GitLab instance URL for fetch repositories (example: https://gitlab.local/)
-    #[arg(long, value_parser, value_name = "FETCH URL")]
+    #[arg(
+        long,
+        value_parser,
+        env = "GTLBSTR_FETCH_URL",
+        value_name = "FETCH URL"
+    )]
     fu: String,
 
     /// Your personal GitLab token for fetch repositories
-    #[arg(long, value_parser, value_name = "FETCH TOKEN")]
+    #[arg(
+        long,
+        value_parser,
+        env = "GTLBSTR_FETCH_TOKEN",
+        value_name = "FETCH TOKEN"
+    )]
     ft: String,
 
-    #[arg(long, value_parser, value_name = "BACKUP URL")]
     /// The GitLab instance URL for backup repositories (example: https://backup-gitlab.local/)
+    #[arg(
+        long,
+        value_parser,
+        env = "GTLBSTR_BACKUP_URL",
+        value_name = "BACKUP URL"
+    )]
     bu: Option<String>,
 
-    #[arg(long, value_parser, value_name = "BACKUP TOKEN")]
     /// Your personal GitLab token for backup repositories
+    #[arg(
+        long,
+        value_parser,
+        env = "GTLBSTR_BACKUP_TOKEN",
+        value_name = "BACKUP TOKEN"
+    )]
     bt: Option<String>,
 
-    #[arg(long, value_parser, value_name = "BACKUP GROUP")]
     /// A target created group on backup GitLab for push repositories
+    #[arg(
+        long,
+        value_parser,
+        env = "GTLBSTR_BACKUP_GROUP",
+        value_name = "BACKUP GROUP"
+    )]
     bg: Option<String>,
 
-    #[arg(long, value_name = "PATTERN")]
     /// Include regexp patterns (cannot be used together with --exclude flag, may be repeated)
+    #[arg(long, env = "GTLBSTR_INCLUDE", value_name = "PATTERN")]
     include: Option<Vec<String>>,
 
-    #[arg(long, value_name = "PATTERN")]
     /// Comma separated exclude regexp patterns (cannot be used together with --include flag, may be repeated)
+    #[arg(long, env = "GTLBSTR_EXCLUDE", value_name = "PATTERN")]
     exclude: Option<Vec<String>>,
 
     /// A destination local folder for save downloaded repositories
-    #[arg(long, short, value_parser, value_name = "DIRECTORY")]
+    #[arg(
+        long,
+        short,
+        value_parser,
+        env = "GTLBSTR_DST",
+        value_name = "DIRECTORY"
+    )]
     dst: Option<String>,
 
     /// Verbose level (one or more, max four)
-    #[arg(short, long, action = clap::ArgAction::Count)]
+    #[arg(short, long, env = "GTLBSTR_VERBOSE", action = clap::ArgAction::Count)]
     verbose: u8,
 
-    #[arg(long)]
     /// Show all projects to download
+    #[arg(long, env = "GTLBSTR_DRY_RUN")]
     dry_run: bool,
 
-    #[arg(long, value_parser, value_name = "COUNT")]
     /// Low-level option, how many projects can fetch in one request
+    #[arg(
+        long,
+        value_parser,
+        env = "GTLBSTR_OBJECTS_PER_PAGE",
+        value_name = "COUNT"
+    )]
     objects_per_page: Option<u32>,
 
-    #[arg(long, value_parser, value_name = "COUNT")]
     /// Maximum projects to download
+    #[arg(long, value_parser, env = "GTLBSTR_LIMIT", value_name = "COUNT")]
     limit: Option<usize>,
 
-    #[arg(long, value_parser, default_value_t = 21, value_name = "LIMIT")]
     /// Limit concurrency download
+    #[arg(
+        long,
+        value_parser,
+        env = "GTLBSTR_CONCURRENCY_LIMIT",
+        default_value_t = 21,
+        value_name = "LIMIT"
+    )]
     concurrency_limit: usize,
 
-    #[arg(long)]
     /// Download projects explicitly owned by user
+    #[arg(long, env = "GTLBSTR_ONLY_OWNED")]
     only_owned: bool,
 
-    #[arg(long)]
     /// Download only user's projects
+    #[arg(long, env = "GTLBSTR_ONLY_MEMBERSHIP")]
     only_membership: bool,
 
     /// Enable download by ssh instead of http. An authorized ssh key is required
-    #[arg(long)]
+    #[arg(long, env = "GTLBSTR_DOWNLOAD_SSH")]
     download_ssh: bool,
 
     /// Enable upload by ssh instead of http. An authorized ssh key is required
-    #[arg(long)]
+    #[arg(long, env = "GTLBSTR_UPLOAD_SSH")]
     upload_ssh: bool,
 
     /// Disable saving the directory hierarchy
-    #[arg(long)]
+    #[arg(long, env = "GTLBSTR_DISABLE_HIERARCHY")]
     disable_hierarchy: bool,
 
     /// Clear dst path before cloning
-    #[arg(long)]
+    #[arg(long, env = "GTLBSTR_CLEAR_DST")]
     clear_dst: bool,
 }
 

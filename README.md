@@ -40,9 +40,8 @@ gitlobster -t token -u url DESTINATION_DIR
 - [x] Clone all available repositories from a Gitlab instance to a group on another GitLab instance while preserving the
       directory structure
 - [x] Add include/exclude patterns
-- [ ] Save not only the directory tree but also repository settings
 - [x] Add show option for only show repositories list
-- [ ] Add config from file
+- [x] Add config by environment variables
 - [x] Add debug option
 - [x] Add limit option
 - [x] Add per-page-for-fetch option
