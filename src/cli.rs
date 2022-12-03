@@ -71,11 +71,11 @@ struct Cli {
     dst: Option<String>,
 
     /// Verbose level (one or more, max four)
-    #[arg(short, long, env = "GTLBSTR_VERBOSE", action = clap::ArgAction::Count)]
+    #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
     /// Show all projects to download
-    #[arg(long, env = "GTLBSTR_DRY_RUN")]
+    #[arg(long)]
     dry_run: bool,
 
     /// Low-level option, how many projects can fetch in one request
