@@ -1,9 +1,16 @@
 [package]
 name = "gitlobster"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
+description = "A tool for cloning all available repositories in a GitLab instance"
+keywords = ["gitlab", "gitlobster"]
+license-file = "LICENSE"
+authors = ["Evgeniy <ea@lowit.ru>"]
+homepage = "https://github.com/lowitea/gitlobster"
+readme = "README.md"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "gitlobster"
 
 [dependencies]
 clap = { version = "4", features = ["cargo", "derive", "env"] }
@@ -30,6 +37,7 @@ integration_tests = []
 
 [profile]
 [profile.release]
-lto = true
-opt-level = "z"
+debug = false
+lto = "fat"
+opt-level = 3
 codegen-units = 1

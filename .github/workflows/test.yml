@@ -1,40 +1,22 @@
+name: Tests
+
 on:
   push:
     branches:
       - master
   pull_request:
 
-name: Tests
 jobs:
   pre_job:
-    # continue-on-error: true # Uncomment once integration is finished
     runs-on: ubuntu-latest
-    # Map a step output to a job output
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
       - id: skip_check
         uses: fkirc/skip-duplicate-actions@master
         with:
-          # All of these options are optional, so you can remove them if you are happy with the defaults
           skip_after_successful_duplicate: "true"
-          paths_ignore: '["**/*.md"]'
-
-  fmt_check:
-    needs: pre_job
-    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v1
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-      - name: Adding component
-        run: rustup component add rustfmt
-      - name: Checking code format
-        run: cargo fmt -- --check --config use_try_shorthand=true
+          paths_ignore: '["**/*.md", "**/*.svg", "**/*.png", ".gitignore"]'
 
   code_check:
     needs: pre_job
@@ -55,6 +37,8 @@ jobs:
           toolchain: stable
           override: true
       - run: rustup component add clippy
+      - name: Checking code format
+        run: cargo fmt -- --check --config use_try_shorthand=true
       - uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
