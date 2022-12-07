@@ -14,6 +14,12 @@
    vim Cargo.toml
    ```
 
+1. Update `Cargo.lock`
+
+   ```shell
+   cargo update
+   ```
+
 1. Commit `Cargo.toml` with the version
 
    ```shell
