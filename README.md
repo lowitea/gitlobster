@@ -116,7 +116,7 @@ gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --bt=<UPLOAD_TOKEN> --bu=
 ### Download all repositories to a local directory
 
 ```shell
-cargo run -- --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ -d out_directory
+gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ -d out_directory
 ```
 
 _Support a simultaneous saving repositories to a local directory and a second GitLab._
@@ -124,7 +124,7 @@ _Support a simultaneous saving repositories to a local directory and a second Gi
 ### Using filters and filtering flags
 
 ```shell
-cargo run -- --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --only-owned --include="^gitlobster_test/download/project_2" --include="^gitlobster_test/download/project_1" -d out_directory
+gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --only-owned --include="^gitlobster_test/download/project_2" --include="^gitlobster_test/download/project_1" -d out_directory
 ```
 
 _Also support the `--exclude` flag to load all repositories except repositories matching a template._

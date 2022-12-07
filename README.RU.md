@@ -116,7 +116,7 @@ gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --bt=<UPLOAD_TOKEN> --bu=
 ### Скачивание всех репозиториев в локальную папку
 
 ```shell
-cargo run -- --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ -d out_directory
+gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ -d out_directory
 ```
 
 _Поддерживается одновременное сохранение репозиториев локально и копирование во второй GitLab._
@@ -124,7 +124,7 @@ _Поддерживается одновременное сохранение р
 ### Использование фильтров и фильтрующих флагов
 
 ```shell
-cargo run -- --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --only-owned --include="^gitlobster_test/download/project_2" --include="^gitlobster_test/download/project_1" -d out_directory
+gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --only-owned --include="^gitlobster_test/download/project_2" --include="^gitlobster_test/download/project_1" -d out_directory
 ```
 
 _Также поддерживается флаг `--exclude` для скачивания всех репозиториев кроме тех что подпадают под шаблон._
