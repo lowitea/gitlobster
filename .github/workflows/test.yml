@@ -34,15 +34,20 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
+          profile: minimal
           toolchain: stable
+          components: clippy
           override: true
-      - run: rustup component add clippy
       - name: Checking code format
         run: cargo fmt -- --check --config use_try_shorthand=true
-      - uses: actions-rs/clippy-check@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features --all-targets
+      - name: Install required cargo
+        run: cargo install clippy-sarif sarif-fmt
+      - name: Run rust-clippy
+        run:
+          cargo clippy
+          --all-features
+          --message-format=json | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
+        continue-on-error: true
         env:
           GTLBSTR_TEST_GITLAB_TOKEN: ""
 
