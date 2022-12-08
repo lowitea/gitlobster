@@ -20,10 +20,10 @@
    cargo update
    ```
 
-1. Commit `Cargo.toml` with the version
+1. Commit `Cargo.toml` and `Cargo.lock` with the version
 
    ```shell
-   git commit -m "bump version" Cargo.toml
+   git commit -m "bump version" Cargo.toml Cargo.lock
    ```
 
 1. Make a new git tag
