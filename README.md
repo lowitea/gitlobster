@@ -1,6 +1,6 @@
 # Gitlobster
 
-**_A tool for full cloning all of available repositories from a GitLab instance._**
+**_A tool for full cloning all available repositories from a GitLab server._**
 
 EN | [RU](README.RU.md)
 
@@ -13,12 +13,12 @@ EN | [RU](README.RU.md)
 
 ## Key features
 
-- Cloning all of available repositories
-- Cloning all branches from each repository
-- Upload all repositories to another GitLab instance (or a group in the same GitLab)
-- Download only updates (including all newly added repositories) after the first full clone
-- Preserving the hierarchy of groups
-- Support filters for cloning only a necessary repositories
+- Clone all available repositories
+- Clone all branches from each repository
+- Upload all repositories to another GitLab server (or a group in the same GitLab)
+- Download only updates (including all newly added repositories) after the first full cloning
+- Preserve the group hierarchy
+- Support filters (include regexp templates) for cloning only necessary repository
 
 ## Install
 
@@ -30,7 +30,7 @@ docker run --rm -it lowitea/gitlobster:latest --help
 
 ### Running pre-assembled binary files
 
-1. Download an archive from [the releases page](https://github.com/lowitea/gitlobster/releases) for your OS.
+1. Download an archive from [the release page](https://github.com/lowitea/gitlobster/releases) for your OS.
 2. Unpack the archive.
 3. Run the `gitlobster` file.
 
@@ -53,7 +53,7 @@ cargo build --release
 ./target/release/gitlobster --help
 ```
 
-_The option to run it in developer mode without pre-build is also available._
+_The option to run it in the developer mode without pre-build is also available._
 
 ```shell
 # in the project directory
@@ -64,7 +64,7 @@ cargo run -- --help
 
 ### GitLab Token
 
-In order for the tool to work, you need to generate a GitLab token with API read rights (`read_api`). If SSH copying is not used, then you will also need permissions to read repositories (`read_repository`).
+In order for the tool to work, you need to generate a GitLab token with API read rights (`read_api`). If SSH copying is not used, then you will also a need permission to read repositories (`read_repository`).
 
 If a second GitLab is used to copy repositories there, then a token is also required for it. Full API rights are required (`api`). If SSH upload is not used, then you will also need write permissions for repositories (`write_repository`).
 
@@ -72,7 +72,7 @@ You can generate tokens on [the settings page](https://github.com/-/profile/pers
 
 ### SSH
 
-If SSH copying is used, then ssh keys must be [added](https://gitlab.com/-/profile/keys ) in GitLab.
+If SSH copying is used, then ssh keys must be [added](https://gitlab.com/-/profile/keys) in GitLab.
 
 ### Help command
 
@@ -119,7 +119,7 @@ gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --bt=<UPLOAD_TOKEN> --bu=
 gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ -d out_directory
 ```
 
-_Support a simultaneous saving repositories to a local directory and a second GitLab._
+_Simultaneous saving repositories to a local directory and a second GitLab is supported._
 
 ### Using filters and filtering flags
 
@@ -127,9 +127,9 @@ _Support a simultaneous saving repositories to a local directory and a second Gi
 gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --only-owned --include="^gitlobster_test/download/project_2" --include="^gitlobster_test/download/project_1" -d out_directory
 ```
 
-_Also support the `--exclude` flag to load all repositories except repositories matching a template._
+_It's also possible to use `--exclude` flag to load all repositories except repositories matching a necessary template._
 
-_Simultaneous use of both the `--exclude` and `--include` flags isn't allowed._
+_Simultaneous use of both `--exclude` and `--include` flags isn't allowed._
 
 ## Analogues
 
