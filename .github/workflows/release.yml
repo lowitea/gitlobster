@@ -5,6 +5,12 @@ on:
     types: [released]
 
 jobs:
+  integration-tests:
+    uses: lowitea/gitlobster/.github/workflows/integration_test.yml@master
+    secrets:
+      SSH_KEY: ${{ secrets.SSH_KEY }}
+      KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
+      GTLBSTR_TEST_GITLAB_TOKEN: ${{ secrets.GTLBSTR_TEST_GITLAB_TOKEN }}
   release-binaries:
     name: release ${{ matrix.target }}
     runs-on: ubuntu-latest
