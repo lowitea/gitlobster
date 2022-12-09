@@ -3,7 +3,7 @@
 **_A tool for full cloning all available repositories from a GitLab server._**
 
 [![Crates.io](https://img.shields.io/crates/v/gitlobster?style=for-the-badge)](https://crates.io/crates/gitlobster)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/lowitea/gitlobster/Release?label=build&style=for-the-badge)](https://github.com/lowitea/gitlobster/actions)
+[![Docker Image Version (latest semver)](https://img.shields.io/docker/v/lowitea/gitlobster?sort=semver&label=docker&style=for-the-badge)](https://hub.docker.com/r/lowitea/gitlobster)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/lowitea/gitlobster/Integration%20tests?label=integration%20tests&style=for-the-badge)](https://github.com/lowitea/gitlobster/actions)
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/lowitea/gitlobster/Tests?label=unit%20tests&style=for-the-badge)](https://github.com/lowitea/gitlobster/actions)
 
