@@ -50,7 +50,7 @@ impl Client {
             Err(e) => {
                 if let Some(status) = e.status() {
                     if status == reqwest::StatusCode::NOT_FOUND {
-                        return Ok(None)
+                        return Ok(None);
                     }
                 }
                 Err(e)
