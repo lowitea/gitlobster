@@ -48,12 +48,12 @@ impl Client {
         match resp {
             Ok(p) => Ok(Some(p)),
             Err(e) => {
-                // TODO: remove unwrap
-                if e.status().unwrap() == reqwest::StatusCode::NOT_FOUND {
-                    Ok(None)
-                } else {
-                    Err(e)
+                if let Some(status) = e.status() {
+                    if status == reqwest::StatusCode::NOT_FOUND {
+                        return Ok(None)
+                    }
                 }
+                Err(e)
             }
         }
     }
