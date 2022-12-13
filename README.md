@@ -69,7 +69,7 @@ cargo run -- --help
 
 ### GitLab Token
 
-In order for the tool to work, you need to generate a GitLab token with API read rights (`read_api`). If SSH copying is not used, then you will also a need permission to read repositories (`read_repository`).
+In order for the tool to work, you need to generate a GitLab token with API read rights (`read_api`). If SSH copying is not used, then you will also need a permission to read repositories (`read_repository`).
 
 If a second GitLab is used to copy repositories there, then a token is also required for it. Full API rights are required (`api`). If SSH upload is not used, then you will also need write permissions for repositories (`write_repository`).
 
