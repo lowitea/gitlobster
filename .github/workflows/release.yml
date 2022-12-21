@@ -11,9 +11,11 @@ jobs:
       SSH_KEY: ${{ secrets.SSH_KEY }}
       KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
       GTLBSTR_TEST_GITLAB_TOKEN: ${{ secrets.GTLBSTR_TEST_GITLAB_TOKEN }}
+
   release-binaries:
     name: release ${{ matrix.target }}
     runs-on: ubuntu-latest
+    needs: integration-tests
     strategy:
       fail-fast: false
       matrix:
@@ -37,6 +39,7 @@ jobs:
   release-docker:
     name: release docker
     runs-on: ubuntu-latest
+    needs: integration-tests
     steps:
       - uses: actions/checkout@v2
       - name: Build and push Docker image
@@ -50,6 +53,7 @@ jobs:
   release-crate:
     name: release crate
     runs-on: ubuntu-latest
+    needs: integration-tests
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1
