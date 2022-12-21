@@ -53,11 +53,11 @@ struct Cli {
     bg: Option<String>,
 
     /// Include regexp patterns (cannot be used together with --exclude flag, may be repeated)
-    #[arg(long, env = "GTLBSTR_INCLUDE", value_name = "PATTERN")]
+    #[arg(short = 'i', long, env = "GTLBSTR_INCLUDE", value_name = "PATTERN")]
     include: Option<Vec<String>>,
 
     /// Comma separated exclude regexp patterns (cannot be used together with --include flag, may be repeated)
-    #[arg(long, env = "GTLBSTR_EXCLUDE", value_name = "PATTERN")]
+    #[arg(short = 'x', long, env = "GTLBSTR_EXCLUDE", value_name = "PATTERN")]
     exclude: Option<Vec<String>>,
 
     /// A destination local folder for save downloaded repositories
