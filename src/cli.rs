@@ -124,6 +124,10 @@ struct Cli {
     /// Clear dst path before cloning
     #[arg(long, env = "GTLBSTR_CLEAR_DST")]
     clear_dst: bool,
+
+    /// Download only default branch
+    #[arg(long, env = "GTLBSTR_ONLY_MASTER")]
+    only_master: bool,
 }
 
 pub fn run() -> Result<()> {
@@ -169,6 +173,7 @@ pub fn run() -> Result<()> {
         upload_ssh: cli.upload_ssh,
         disable_hierarchy: cli.disable_hierarchy,
         clear_dst: cli.clear_dst,
+        only_master: cli.only_master,
     };
 
     clone(clone_params)

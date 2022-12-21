@@ -99,6 +99,7 @@ fn make_git_path(project: &types::Project, git_http_auth: &Option<String>) -> St
 async fn clone_project(
     project: &types::Project,
     dst: &str,
+    only_master: bool,
     fetch_git_http_auth: &Option<String>,
     backup: &Option<BackupData>,
     disable_hierarchy: bool,
@@ -112,7 +113,7 @@ async fn clone_project(
         &project.path_with_namespace
     };
 
-    git::fetch(src, format!("{}/{}", dst, &p_path)).await?;
+    git::fetch(src, format!("{}/{}", dst, &p_path), only_master).await?;
 
     info!("start pushing");
 
@@ -165,6 +166,7 @@ pub struct CloneParams {
     pub upload_ssh: bool,
     pub disable_hierarchy: bool,
     pub clear_dst: bool,
+    pub only_master: bool,
 }
 
 #[tokio::main]
@@ -241,6 +243,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
             clone_project(
                 pr,
                 &dst,
+                p.only_master,
                 &fetch_git_http_auth,
                 &backup_data,
                 p.disable_hierarchy,

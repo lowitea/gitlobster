@@ -42,7 +42,12 @@ async fn clone(src: &String, dst: &String) -> Result<()> {
     Ok(())
 }
 
-async fn update(path: &String) -> Result<()> {
+async fn update(path: &String, only_master: bool) -> Result<()> {
+    if only_master {
+        git(vec!["-C", path, "pull"]).await?;
+        return Ok(());
+    }
+
     git(vec!["-C", path, "fetch", "--all"]).await?;
 
     let branches_out = git(vec!["-C", path, "branch", "-la"]).await?;
@@ -104,12 +109,12 @@ async fn push_all_remote_backup(path: String) -> Result<()> {
     Ok(())
 }
 
-pub async fn fetch(src: String, dst: String) -> Result<()> {
+pub async fn fetch(src: String, dst: String, only_master: bool) -> Result<()> {
     match check_status(&dst).await {
         Ok(_) => (),
         Err(_) => clone(&src, &dst).await?,
     };
-    update(&dst).await
+    update(&dst, only_master).await
 }
 
 pub async fn push_backup(path: String, remote: String) -> Result<()> {
