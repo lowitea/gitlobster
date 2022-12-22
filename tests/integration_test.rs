@@ -24,7 +24,7 @@ mod tests {
             assert!(content.trim() == data);
         }
 
-        let prefix = format!("{}/gitlobster_test/download", OUT_DIR);
+        let prefix = format!("{}/gitlobster_test/example", OUT_DIR);
         let p1_path = format!("{}/project_1", prefix);
         let p1_file_path = format!("{}/project_1", p1_path);
         let files = vec![
@@ -60,7 +60,7 @@ mod tests {
         }
 
         let url_prefix = format!("{}api/v4/projects", GITLAB_HOST);
-        let project_path = "gitlobster_test%2Fupload%2Fgitlobster_test%2Fdownload";
+        let project_path = "gitlobster_test%2Fupload%2Fgitlobster_test%2Fexample";
         let p1_name = format!("{}%2Fproject_1", project_path);
         let p2_name = format!("{}%2Fproject_2", project_path);
         let p3_name = format!("{}%2Fsubgroup_1%2Fproject_3", project_path);
@@ -121,7 +121,7 @@ mod tests {
             --bu={} \
             --bg=gitlobster_test/upload \
             --only-owned \
-            --include='^gitlobster_test/download' \
+            --include='^gitlobster_test/example' \
             --concurrency-limit=1 \
             -d {} \
             -vv",
@@ -134,7 +134,7 @@ mod tests {
     }
 
     fn update_remote_project(gitlab_token: &str) -> String {
-        let project = "gitlobster_test%2Fdownload%2Fproject_1";
+        let project = "gitlobster_test%2Fexample%2Fproject_1";
         let file = "updating";
         let url = format!(
             "{}api/v4/projects/{}/repository/files/{}?access_token={}",
