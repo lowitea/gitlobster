@@ -1,4 +1,4 @@
-use futures::future::join_all;
+use futures::future::try_join_all;
 
 use pbr::ProgressBar;
 use regex::Regex;
@@ -115,13 +115,13 @@ async fn clone_project(
 
     git::fetch(src, format!("{}/{}", dst, &p_path), only_master).await?;
 
-    info!("start pushing");
-
     let (backup_gl, backup_group, backup_git_http_auth) = if let Some(backup) = backup {
         (&backup.client, &backup.group, &backup.git_http_auth)
     } else {
         return Ok(());
     };
+
+    info!("start pushing");
 
     let path: Vec<String> = if disable_hierarchy {
         vec![p_path.clone()]
@@ -239,7 +239,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     pb.message("Cloning: ");
 
     for chunk in projects.chunks(p.concurrency_limit) {
-        join_all(chunk.iter().map(|pr| {
+        try_join_all(chunk.iter().map(|pr| {
             clone_project(
                 pr,
                 &dst,
@@ -249,7 +249,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
                 p.disable_hierarchy,
             )
         }))
-        .await;
+        .await?;
         pb.add(chunk.len() as u64);
     }
 
