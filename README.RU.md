@@ -94,8 +94,8 @@ Options:
       --bu <BACKUP URL>            The GitLab instance URL for backup repositories (example: https://backup-gitlab.local/) [env: GTLBSTR_BACKUP_URL=]
       --bt <BACKUP TOKEN>          Your personal GitLab token for backup repositories [env: GTLBSTR_BACKUP_TOKEN=]
       --bg <BACKUP GROUP>          A target created group on backup GitLab for push repositories [env: GTLBSTR_BACKUP_GROUP=]
-      --include <PATTERN>          Include regexp patterns (cannot be used together with --exclude flag, may be repeated) [env: GTLBSTR_INCLUDE=]
-      --exclude <PATTERN>          Comma separated exclude regexp patterns (cannot be used together with --include flag, may be repeated) [env: GTLBSTR_EXCLUDE=]
+  -i, --include <PATTERN>          Include regexp patterns (cannot be used together with --exclude flag, may be repeated) [env: GTLBSTR_INCLUDE=]
+  -x, --exclude <PATTERN>          Comma separated exclude regexp patterns (cannot be used together with --include flag, may be repeated) [env: GTLBSTR_EXCLUDE=]
   -d, --dst <DIRECTORY>            A destination local folder for save downloaded repositories [env: GTLBSTR_DST=]
   -v, --verbose...                 Verbose level (one or more, max four)
       --dry-run                    Show all projects to download
@@ -108,6 +108,7 @@ Options:
       --upload-ssh                 Enable upload by ssh instead of http. An authorized ssh key is required [env: GTLBSTR_UPLOAD_SSH=]
       --disable-hierarchy          Disable saving the directory hierarchy [env: GTLBSTR_DISABLE_HIERARCHY=]
       --clear-dst                  Clear dst path before cloning [env: GTLBSTR_CLEAR_DST=]
+      --only-master                Download only default branch [env: GTLBSTR_ONLY_MASTER=]
   -h, --help                       Print help information
   -V, --version                    Print version information
 ```
@@ -115,13 +116,21 @@ Options:
 ### Копирование всех репозиториев в другой GitLab
 
 ```shell
-gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --bt=<UPLOAD_TOKEN> --bu=https://gitlab.com/ --bg=gitlobster_test/upload
+gitlobster \
+    --ft=<FETCH_TOKEN> \
+    --fu=https://gitlab.com/ \
+    --bt=<UPLOAD_TOKEN> \
+    --bu=https://gitlab.com/ \
+    --bg=gitlobster_test/upload
 ```
 
 ### Скачивание всех репозиториев в локальную папку
 
 ```shell
-gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ -d out_directory
+gitlobster \
+    --ft=<FETCH_TOKEN> \
+    --fu=https://gitlab.com/ \
+    -d out_directory
 ```
 
 _Поддерживается одновременное сохранение репозиториев локально и копирование во второй GitLab._
@@ -129,7 +138,13 @@ _Поддерживается одновременное сохранение р
 ### Использование фильтров и фильтрующих флагов
 
 ```shell
-gitlobster --ft=<FETCH_TOKEN> --fu=https://gitlab.com/ --only-owned --include="^gitlobster_test/download/project_2" --include="^gitlobster_test/download/project_1" -d out_directory
+gitlobster \
+    --ft=<FETCH_TOKEN> \
+    --fu=https://gitlab.com/ \
+    --only-owned \
+    --include="^gitlobster_test/download/project_2" \
+    --include="^gitlobster_test/download/project_1" \
+    -d out_directory
 ```
 
 _Также поддерживается флаг `--exclude` для скачивания всех репозиториев, кроме тех, что подпадают под шаблон._
