@@ -1,6 +1,6 @@
 [package]
 name = "gitlobster"
-version = "1.1.0"
+version = "1.1.1"
 edition = "2021"
 description = "A tool for cloning all available repositories in a GitLab instance"
 keywords = ["gitlab", "gitlobster"]
