@@ -154,7 +154,7 @@ _Simultaneous use of both `--exclude` and `--include` flags isn't allowed._
 ### Using with Docker
 
 ```shell
-docker run --rm -it -v $(pwd)/out:/out gitlobster:dev \
+docker run --rm -it -v $(pwd)/out:/out lowitea/gitlobster:latest \
     --ft=<FETCH_TOKEN> \
     --fu=https://gitlab.com/ \
     --include='^gitlobster_test/example' \
