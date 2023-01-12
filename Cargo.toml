@@ -3,11 +3,14 @@ name = "gitlobster"
 version = "1.1.1"
 edition = "2021"
 description = "A tool for cloning all available repositories in a GitLab instance"
+categories = ["development-tools", "command-line-utilities"]
 keywords = ["gitlab", "gitlobster"]
-license-file = "LICENSE"
 authors = ["Evgeniy <ea@lowit.ru>"]
 homepage = "https://github.com/lowitea/gitlobster"
+repository = "https://github.com/lowitea/gitlobster"
 readme = "README.md"
+license = "Apache-2.0"
+license-file = "LICENSE"
 
 [[bin]]
 name = "gitlobster"
