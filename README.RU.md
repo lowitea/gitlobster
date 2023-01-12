@@ -155,10 +155,10 @@ _Можно использовать только один из флагов `--
 
 ```shell
 docker run --rm -it -v $(pwd)/out:/out gitlobster:dev \
-            --ft=<FETCH_TOKEN> \
-            --fu=https://gitlab.com/ \
-            --include='^gitlobster_test/example' \
-            -d /out
+    --ft=<FETCH_TOKEN> \
+    --fu=https://gitlab.com/ \
+    --include='^gitlobster_test/example' \
+    -d /out
 ```
 
 ## Аналоги
