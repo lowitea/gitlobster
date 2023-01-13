@@ -161,6 +161,10 @@ docker run --rm -it -v $(pwd)/out:/out lowitea/gitlobster:latest \
     -d /out
 ```
 
+### Предупреждение
+
+Пустые проекты не будут перенесены. Так как, их невозможно склонировать через git, пока в этих проектах не будет создано ни одной ветки ([issue 37](https://github.com/lowitea/gitlobster/issues/37)).
+
 ## Analogues
 
 - [gitlabber](https://github.com/ezbz/gitlabber)
