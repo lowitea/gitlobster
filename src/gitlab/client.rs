@@ -104,6 +104,8 @@ impl Client {
             next_page += 1;
         }
 
+        projects.retain(|p|!p.empty_repo);
+
         Ok(projects)
     }
 
