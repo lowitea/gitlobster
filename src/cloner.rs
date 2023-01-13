@@ -167,11 +167,12 @@ pub struct CloneParams {
     pub disable_hierarchy: bool,
     pub clear_dst: bool,
     pub only_master: bool,
+    pub disable_sync_date: bool,
 }
 
 #[tokio::main]
 pub async fn clone(p: CloneParams) -> Result<()> {
-    let fetch_gl = gitlab::Client::new(&p.fetch.token, p.fetch.url, p.objects_per_page)?;
+    let fetch_gl = gitlab::Client::new(&p.fetch.token, p.fetch.url, p.objects_per_page, true)?;
     let mut projects = fetch_gl
         .get_projects(p.only_owned, p.only_membership)
         .await?;
@@ -191,7 +192,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     }
 
     let backup_data = if let Some(backup) = p.backup {
-        let client = gitlab::Client::new(&backup.token, backup.url, None)?;
+        let client = gitlab::Client::new(&backup.token, backup.url, None, p.disable_sync_date)?;
         let group = client.get_group(backup.group).await?;
         let git_http_auth = if p.upload_ssh {
             None
