@@ -128,6 +128,10 @@ struct Cli {
     /// Download only default branch
     #[arg(long, env = "GTLBSTR_ONLY_MASTER")]
     only_master: bool,
+
+    /// Disable adding sync dates in project descriptions
+    #[arg(long, env = "GTLBSTR_DISABLE_SYNC_DATE")]
+    disable_sync_date: bool,
 }
 
 pub fn run() -> Result<()> {
@@ -174,6 +178,7 @@ pub fn run() -> Result<()> {
         disable_hierarchy: cli.disable_hierarchy,
         clear_dst: cli.clear_dst,
         only_master: cli.only_master,
+        disable_sync_date: cli.disable_sync_date,
     };
 
     clone(clone_params)

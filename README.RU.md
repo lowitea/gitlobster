@@ -109,6 +109,7 @@ Options:
       --disable-hierarchy          Disable saving the directory hierarchy [env: GTLBSTR_DISABLE_HIERARCHY=]
       --clear-dst                  Clear dst path before cloning [env: GTLBSTR_CLEAR_DST=]
       --only-master                Download only default branch [env: GTLBSTR_ONLY_MASTER=]
+      --disable-sync-date          Disable adding sync dates in project descriptions [env: GTLBSTR_DISABLE_SYNC_DATE=]
   -h, --help                       Print help information
   -V, --version                    Print version information
 ```
