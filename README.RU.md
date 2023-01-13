@@ -161,6 +161,10 @@ docker run --rm -it -v $(pwd)/out:/out lowitea/gitlobster:latest \
     -d /out
 ```
 
+### Notice
+
+Empty projects will not be migrated. Because they cannot be cloned via git until no branches are created in these projects ([issue 37](https://github.com/lowitea/gitlobster/issues/37)).
+
 ## Аналоги
 
 - [gitlabber](https://github.com/ezbz/gitlabber)
