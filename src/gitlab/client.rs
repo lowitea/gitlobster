@@ -10,10 +10,16 @@ const API_VERSION: &str = "v4";
 pub struct Client {
     url: Url,
     http: reqwest::Client,
+    disable_sync_date: bool,
 }
 
 impl Client {
-    pub fn new(token: &str, mut url: Url, opp: Option<u32>) -> Result<Self> {
+    pub fn new(
+        token: &str,
+        mut url: Url,
+        opp: Option<u32>,
+        disable_sync_date: bool,
+    ) -> Result<Self> {
         let http = reqwest::Client::new();
         let opp = if let Some(opp) = opp { opp } else { 1000 };
 
@@ -21,7 +27,11 @@ impl Client {
         url.set_path(&format!("api/{}", API_VERSION));
         url.set_query(Some(&query));
 
-        Ok(Client { url, http })
+        Ok(Client {
+            url,
+            http,
+            disable_sync_date,
+        })
     }
 
     fn build_request<S: Into<String>>(&self, m: Method, path: S) -> RequestBuilder {
@@ -109,12 +119,16 @@ impl Client {
         Ok(projects)
     }
 
-    fn make_project_description(new_description: Option<String>) -> String {
-        format!(
-            "{} 🦞 Synced: {}",
-            new_description.unwrap_or_default(),
-            Utc::now().to_rfc3339()
-        )
+    fn make_project_description(&self, new_description: Option<String>) -> String {
+        if self.disable_sync_date {
+            new_description.unwrap_or_default()
+        } else {
+            format!(
+                "{} 🦞 Synced: {}",
+                new_description.unwrap_or_default(),
+                Utc::now().to_rfc3339()
+            )
+        }
     }
 
     pub async fn make_project(
@@ -133,7 +147,7 @@ impl Client {
 
         let path = name.clone();
         let namespace_id = group_id;
-        let description = Client::make_project_description(info.description.clone());
+        let description = self.make_project_description(info.description.clone());
 
         self.build_request(Method::POST, "projects")
             .json(&MakeProjectRequest {
@@ -159,7 +173,7 @@ impl Client {
             description: String,
         }
 
-        let description = Client::make_project_description(info.description.clone());
+        let description = self.make_project_description(info.description.clone());
 
         self.build_request(Method::PUT, format!("projects/{}", project.id))
             .json(&UpdateProjectRequest { description })
