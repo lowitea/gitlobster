@@ -10,7 +10,6 @@ homepage = "https://github.com/lowitea/gitlobster"
 repository = "https://github.com/lowitea/gitlobster"
 readme = "README.md"
 license = "Apache-2.0"
-license-file = "LICENSE"
 
 [[bin]]
 name = "gitlobster"
