@@ -37,6 +37,7 @@ impl Client {
     fn build_request<S: Into<String>>(&self, m: Method, path: S) -> RequestBuilder {
         let mut url = self.url.clone();
         url.set_path(&format!("{}/{}", url.path(), path.into()));
+        // TODO: add url to verbose logs with info level
         self.http
             .request(m, url)
             .header("Content-Type", "application/json")
