@@ -156,9 +156,17 @@ pub fn run() -> Result<()> {
         cli.include.map(FilterPatterns::Include)
     };
 
-    let backup_gl = if let (Some(url), Some(token)) = (cli.bu, cli.bt) {
-        Some(BackupGitlabOptions::new(url, token, cli.bg)?)
+    let backup_gl = if let (Some(url), Some(token)) = (&cli.bu, &cli.bt) {
+        Some(BackupGitlabOptions::new(
+            url.clone(),
+            token.clone(),
+            cli.bg,
+        )?)
     } else {
+        if cli.bu.is_some() || cli.bt.is_some() {
+            let err = "For upload to another gitlab, you must specify both the --bt and --bu flags";
+            bail!(err.to_string());
+        };
         None
     };
 
