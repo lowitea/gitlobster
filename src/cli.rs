@@ -156,8 +156,8 @@ pub fn run() -> Result<()> {
         cli.include.map(FilterPatterns::Include)
     };
 
-    let backup_gl = if let (Some(url), Some(token), Some(group)) = (cli.bu, cli.bt, cli.bg) {
-        Some(BackupGitlabOptions::new(url, token, group)?)
+    let backup_gl = if let (Some(url), Some(token)) = (cli.bu, cli.bt) {
+        Some(BackupGitlabOptions::new(url, token, cli.bg)?)
     } else {
         None
     };
