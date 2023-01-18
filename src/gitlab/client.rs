@@ -200,13 +200,13 @@ impl Client {
     pub async fn make_subgroup(
         &self,
         name: String,
-        parent_id: types::GroupId,
+        parent_id: Option<types::GroupId>,
     ) -> reqwest::Result<types::Group> {
         #[derive(Serialize)]
         struct MakeGroupRequest {
             name: String,
             path: String,
-            parent_id: types::GroupId,
+            parent_id: Option<types::GroupId>,
         }
 
         let path = name.clone();
@@ -227,25 +227,32 @@ impl Client {
     pub async fn make_project_with_namespace(
         &self,
         mut path: Vec<String>,
-        root_group: &types::Group,
+        root_group: &Option<types::Group>,
         project_info: &types::Project,
     ) -> reqwest::Result<types::Project> {
-        let mut parent_id = root_group.id;
+        let mut parent_id = root_group.as_ref().map(|gr| gr.id);
 
         // TODO: remove unwrap
         let project_name = path.pop().unwrap();
 
-        let mut current_namespace = root_group.full_path.clone();
+        let mut current_namespace = root_group
+            .as_ref()
+            .map(|gr| gr.full_path.clone())
+            .unwrap_or_default();
 
         for group_name in path {
-            current_namespace = format!("{}/{}", current_namespace, group_name);
+            current_namespace = if current_namespace.is_empty() {
+                group_name.clone()
+            } else {
+                format!("{}/{}", current_namespace, group_name)
+            };
             let group = if let Some(group) = self.group_exist(current_namespace.clone()).await? {
                 group
             } else {
                 self.make_subgroup(group_name, parent_id).await?
             };
 
-            parent_id = group.id;
+            parent_id = Some(group.id);
         }
 
         match self
@@ -254,8 +261,17 @@ impl Client {
         {
             Some(p) => self.update_project(&p, project_info).await,
             None => {
-                self.make_project(project_name, parent_id, project_info)
-                    .await
+                self.make_project(
+                    project_name,
+                    parent_id.unwrap_or_else(|| {
+                        panic!(
+                            "Parent group for project {} not found",
+                            &project_info.name_with_namespace
+                        )
+                    }),
+                    project_info,
+                )
+                .await
             }
         }
     }

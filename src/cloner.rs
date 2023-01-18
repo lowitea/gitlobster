@@ -28,11 +28,11 @@ impl FetchGitlabOptions {
 pub struct BackupGitlabOptions {
     url: Url,
     token: String,
-    group: String,
+    group: Option<String>,
 }
 
 impl BackupGitlabOptions {
-    pub fn new(url: String, token: String, group: String) -> Result<Self> {
+    pub fn new(url: String, token: String, group: Option<String>) -> Result<Self> {
         let url = Url::parse(&url)?;
         Ok(Self { url, token, group })
     }
@@ -40,7 +40,7 @@ impl BackupGitlabOptions {
 
 struct BackupData {
     client: gitlab::Client,
-    group: types::Group,
+    group: Option<types::Group>,
     git_http_auth: Option<String>,
 }
 
@@ -193,7 +193,11 @@ pub async fn clone(p: CloneParams) -> Result<()> {
 
     let backup_data = if let Some(backup) = p.backup {
         let client = gitlab::Client::new(&backup.token, backup.url, None, p.disable_sync_date)?;
-        let group = client.get_group(backup.group).await?;
+        let group = if let Some(gr) = backup.group {
+            Some(client.get_group(gr).await?)
+        } else {
+            None
+        };
         let git_http_auth = if p.upload_ssh {
             None
         } else {
@@ -217,11 +221,12 @@ pub async fn clone(p: CloneParams) -> Result<()> {
 
     if p.dry_run {
         if let Some(backup_data) = &backup_data {
-            let g = &backup_data.group;
-            println!(
-                "Backup group:   {} (id: {}, path: {})",
-                g.name, g.id, g.full_path
-            );
+            if let Some(g) = backup_data.group.as_ref() {
+                println!(
+                    "Backup group:   {} (id: {}, path: {})",
+                    g.name, g.id, g.full_path
+                )
+            };
         }
         println!("Local out dir: {}", &dst);
         println!();
