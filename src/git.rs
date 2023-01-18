@@ -13,17 +13,14 @@ async fn git<S: AsRef<OsStr>>(args: Vec<S>) -> Result<String> {
 
     let cmd = Command::new("git").args(args).output().await?;
 
-    let errmsg = if !cmd.stderr.is_empty() {
-        let err = from_utf8(&cmd.stderr)?;
-        warn!(err);
-        err
-    } else {
-        ""
-    };
-
+    let errmsg = from_utf8(&cmd.stderr).unwrap_or_default();
     if !cmd.status.success() {
         warn!("git exit status not success");
         bail!("git error: {}", errmsg);
+    }
+
+    if !errmsg.is_empty() {
+        info!("{}", errmsg);
     }
 
     Ok(from_utf8(&cmd.stdout)?.to_string())
