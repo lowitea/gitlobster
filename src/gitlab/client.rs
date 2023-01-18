@@ -3,6 +3,7 @@ use anyhow::Result;
 use chrono::Utc;
 use reqwest::{Method, RequestBuilder, Response};
 use serde::Serialize;
+use tracing::info;
 use url::Url;
 
 const API_VERSION: &str = "v4";
@@ -11,6 +12,8 @@ pub struct Client {
     url: Url,
     http: reqwest::Client,
     disable_sync_date: bool,
+    token: String,
+    limit: u32,
 }
 
 impl Client {
@@ -21,35 +24,56 @@ impl Client {
         disable_sync_date: bool,
     ) -> Result<Self> {
         let http = reqwest::Client::new();
-        let opp = if let Some(opp) = opp { opp } else { 1000 };
+        let limit = if let Some(opp) = opp { opp } else { 1000 };
+        let token = token.to_string();
 
-        let query = format!("access_token={}&per_page={}", token, opp);
         url.set_path(&format!("api/{}", API_VERSION));
-        url.set_query(Some(&query));
 
         Ok(Client {
             url,
             http,
             disable_sync_date,
+            token,
+            limit,
         })
     }
 
-    fn build_request<S: Into<String>>(&self, m: Method, path: S) -> RequestBuilder {
+    fn build_request<S: Into<String>>(
+        &self,
+        m: Method,
+        path: S,
+        query: Option<String>,
+    ) -> RequestBuilder {
         let mut url = self.url.clone();
         url.set_path(&format!("{}/{}", url.path(), path.into()));
-        // TODO: add url to verbose logs with info level
+
+        if let Some(query) = query {
+            url.set_query(Some(&query));
+        }
+
+        info!("{}", url);
+
         self.http
             .request(m, url)
             .header("Content-Type", "application/json")
+            .header("PRIVATE-TOKEN", &self.token)
     }
 
-    async fn request<S: Into<String>>(&self, m: Method, path: S) -> reqwest::Result<Response> {
-        self.build_request(m, path).send().await?.error_for_status()
+    async fn request<S: Into<String>>(
+        &self,
+        m: Method,
+        path: S,
+        query: Option<String>,
+    ) -> reqwest::Result<Response> {
+        self.build_request(m, path, query)
+            .send()
+            .await?
+            .error_for_status()
     }
 
     pub async fn get_project(&self, path: String) -> reqwest::Result<types::Project> {
         let path = urlencoding::encode(&path);
-        self.request(Method::GET, format!("projects/{}", path))
+        self.request(Method::GET, format!("projects/{}", path), None)
             .await?
             .json::<types::Project>()
             .await
@@ -82,27 +106,14 @@ impl Client {
         let mut next_page = 1;
 
         loop {
-            let mut url = self.url.clone();
-            url.set_path(&format!("{}/{}", url.path(), "projects"));
-
-            let mut query = url.query().expect("query is empty").to_string();
-            query += format!("&page={}", next_page).as_str();
+            let mut query = format!("per_page={}&page={}", &self.limit, next_page);
             if only_owned {
                 query += "&owned=true"
             }
             if only_membership {
                 query += "&only_membership=true"
             }
-            url.set_query(Some(&query));
-
-            let resp = self
-                .http
-                .request(Method::GET, url)
-                .header("Content-Type", "application/json")
-                .send()
-                .await?
-                .error_for_status()?;
-
+            let resp = self.request(Method::GET, "projects", Some(query)).await?;
             let headers = resp.headers().clone();
 
             projects.append(&mut resp.json::<Vec<types::Project>>().await?);
@@ -150,7 +161,7 @@ impl Client {
         let namespace_id = group_id;
         let description = self.make_project_description(info.description.clone());
 
-        self.build_request(Method::POST, "projects")
+        self.build_request(Method::POST, "projects", None)
             .json(&MakeProjectRequest {
                 name,
                 description,
@@ -176,7 +187,7 @@ impl Client {
 
         let description = self.make_project_description(info.description.clone());
 
-        self.build_request(Method::PUT, format!("projects/{}", project.id))
+        self.build_request(Method::PUT, format!("projects/{}", project.id), None)
             .json(&UpdateProjectRequest { description })
             .send()
             .await?
@@ -187,7 +198,7 @@ impl Client {
 
     pub async fn get_group(&self, path: String) -> reqwest::Result<types::Group> {
         let path = urlencoding::encode(&path);
-        self.request(Method::GET, format!("groups/{}", path))
+        self.request(Method::GET, format!("groups/{}", path), None)
             .await?
             .json::<types::Group>()
             .await
@@ -211,7 +222,7 @@ impl Client {
 
         let path = name.clone();
 
-        self.build_request(Method::POST, "groups")
+        self.build_request(Method::POST, "groups", None)
             .json(&MakeGroupRequest {
                 name,
                 path,
@@ -231,10 +242,7 @@ impl Client {
         project_info: &types::Project,
     ) -> reqwest::Result<types::Project> {
         let mut parent_id = root_group.as_ref().map(|gr| gr.id);
-
-        // TODO: remove unwrap
-        let project_name = path.pop().unwrap();
-
+        let project_name = path.pop().expect("invalid project path");
         let mut current_namespace = root_group
             .as_ref()
             .map(|gr| gr.full_path.clone())
@@ -277,7 +285,7 @@ impl Client {
     }
 
     pub async fn get_current_user(&self) -> reqwest::Result<types::User> {
-        self.request(Method::GET, "user")
+        self.request(Method::GET, "user", None)
             .await?
             .json::<types::User>()
             .await
