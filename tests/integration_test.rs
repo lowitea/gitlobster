@@ -57,6 +57,7 @@ mod tests {
         #[derive(Deserialize)]
         struct Project {
             description: String,
+            name: String,
         }
 
         let url_prefix = format!("{}api/v4/projects", GITLAB_HOST);
@@ -90,14 +91,19 @@ mod tests {
         }
 
         // check description
-        let projects = vec![p1_name, p2_name, p3_name];
-        for project in projects {
+        let projects = vec![
+            (p1_name, "project_1"),
+            (p2_name, "Project 2"),
+            (p3_name, "project_3"),
+        ];
+        for (project, project_name) in projects {
             let url = format!("{}/{}?access_token={}", url_prefix, project, gitlab_token);
             let resp = client.get(url).send().unwrap().error_for_status().unwrap();
             let p = resp.json::<Project>().unwrap();
             let d_time_str = p.description.split(" 🦞 Synced: ").last().unwrap();
             let d_time = DateTime::parse_from_rfc3339(d_time_str).unwrap();
             assert!(d_time >= start_time);
+            assert!(p.name == project_name);
         }
     }
 

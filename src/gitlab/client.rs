@@ -156,7 +156,7 @@ impl Client {
 
     pub async fn make_project(
         &self,
-        name: String,
+        slug: String,
         group_id: types::GroupId,
         info: &types::Project,
     ) -> reqwest::Result<types::Project> {
@@ -168,7 +168,8 @@ impl Client {
             namespace_id: types::GroupId,
         }
 
-        let path = name.clone();
+        let name = info.name.clone();
+        let path = slug.clone();
         let namespace_id = group_id;
         let description = self.make_project_description(info.description.clone());
 
@@ -252,7 +253,7 @@ impl Client {
         project_info: &types::Project,
     ) -> reqwest::Result<types::Project> {
         let mut parent_id = root_group.as_ref().map(|gr| gr.id);
-        let project_name = path.pop().expect("invalid project path");
+        let project_slug = path.pop().expect("invalid project path");
         let mut current_namespace = root_group
             .as_ref()
             .map(|gr| gr.full_path.clone())
@@ -274,13 +275,13 @@ impl Client {
         }
 
         match self
-            .project_exist(format!("{}/{}", current_namespace, project_name))
+            .project_exist(format!("{}/{}", current_namespace, project_slug))
             .await?
         {
             Some(p) => self.update_project(&p, project_info).await,
             None => {
                 self.make_project(
-                    project_name,
+                    project_slug,
                     parent_id.unwrap_or_else(|| {
                         panic!(
                             "Parent group for project {} not found",
