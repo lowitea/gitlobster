@@ -51,7 +51,6 @@ async fn update(path: &String, only_master: bool) -> Result<()> {
     let branches_out = git(vec!["-C", path, "branch", "-la"]).await?;
     let branches = branches_out
         .split('\n')
-        .into_iter()
         .map(|v| v.trim())
         .filter(|v| !v.is_empty())
         .filter(|v| !v.starts_with("remotes/upstream/HEAD"))
