@@ -42,6 +42,7 @@ struct BackupData {
     client: gitlab::Client,
     group: Option<types::Group>,
     git_http_auth: Option<String>,
+    force_protocol: ForceProtocol,
 }
 
 pub enum FilterPatterns {
@@ -84,13 +85,28 @@ fn filter_projects(
     Ok(projects)
 }
 
-fn make_git_path(project: &types::Project, git_http_auth: &Option<String>) -> String {
+pub enum ForceProtocol {
+    No,
+    Http,
+    Https,
+}
+
+fn make_git_path(
+    project: &types::Project,
+    git_http_auth: &Option<String>,
+    force_protocol: &ForceProtocol,
+) -> String {
     if let Some(auth) = git_http_auth {
         let parts: Vec<&str> = project.http_url_to_repo.split("://").collect();
         if parts.len() != 2 {
             panic!("project with incorrect http path")
         }
-        format!("{}://{}@{}", parts[0], auth, parts[1])
+        let protocol = match force_protocol {
+            ForceProtocol::No => parts[0],
+            ForceProtocol::Http => "http",
+            ForceProtocol::Https => "https",
+        };
+        format!("{}://{}@{}", protocol, auth, parts[1])
     } else {
         project.ssh_url_to_repo.clone()
     }
@@ -103,10 +119,11 @@ async fn clone_project(
     fetch_git_http_auth: &Option<String>,
     backup: &Option<BackupData>,
     disable_hierarchy: bool,
+    fetch_force_protocol: &ForceProtocol,
 ) -> Result<()> {
     debug!("project path: {}", &project.path_with_namespace);
 
-    let src = make_git_path(project, fetch_git_http_auth);
+    let src = make_git_path(project, fetch_git_http_auth, fetch_force_protocol);
     let p_path = if disable_hierarchy {
         &project.path
     } else {
@@ -115,11 +132,17 @@ async fn clone_project(
 
     git::fetch(src, format!("{}/{}", dst, &p_path), only_master).await?;
 
-    let (backup_gl, backup_group, backup_git_http_auth) = if let Some(backup) = backup {
-        (&backup.client, &backup.group, &backup.git_http_auth)
-    } else {
-        return Ok(());
-    };
+    let (backup_gl, backup_group, backup_git_http_auth, backup_force_protocol) =
+        if let Some(backup) = backup {
+            (
+                &backup.client,
+                &backup.group,
+                &backup.git_http_auth,
+                &backup.force_protocol,
+            )
+        } else {
+            return Ok(());
+        };
 
     info!("start pushing");
 
@@ -138,7 +161,7 @@ async fn clone_project(
         .make_project_with_namespace(path, backup_group, project)
         .await?;
 
-    let remote = make_git_path(&backup_project, backup_git_http_auth);
+    let remote = make_git_path(&backup_project, backup_git_http_auth, backup_force_protocol);
     git::push_backup(format!("{}/{}", dst, p_path), remote).await
 }
 
@@ -169,6 +192,8 @@ pub struct CloneParams {
     pub only_master: bool,
     pub disable_sync_date: bool,
     pub gitlab_timeout: Option<u32>,
+    pub download_force_protocol: ForceProtocol,
+    pub upload_force_protocol: ForceProtocol,
 }
 
 #[tokio::main]
@@ -221,6 +246,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
             client,
             group,
             git_http_auth,
+            force_protocol: p.upload_force_protocol,
         })
     } else {
         None
@@ -266,6 +292,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
                 &fetch_git_http_auth,
                 &backup_data,
                 p.disable_hierarchy,
+                &p.download_force_protocol,
             )
         }))
         .await?;
