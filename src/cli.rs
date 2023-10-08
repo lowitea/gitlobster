@@ -1,6 +1,8 @@
 use clap::Parser;
 
-use crate::cloner::{clone, BackupGitlabOptions, CloneParams, FetchGitlabOptions, FilterPatterns};
+use crate::cloner::{
+    clone, BackupGitlabOptions, CloneParams, FetchGitlabOptions, FilterPatterns, ForceProtocol,
+};
 use anyhow::{bail, Result};
 
 #[derive(Parser)]
@@ -117,6 +119,22 @@ struct Cli {
     #[arg(long, env = "GTLBSTR_UPLOAD_SSH")]
     upload_ssh: bool,
 
+    /// Force download repositories by insecure protocol. Does not work with the download_ssh flag
+    #[arg(long, env = "GTLBSTR_DOWNLOAD_FORCE_HTTP")]
+    download_force_http: bool,
+
+    /// Force download repositories by secure protocol. Does not work with the download_ssh flag
+    #[arg(long, env = "GTLBSTR_DOWNLOAD_FORCE_HTTPS")]
+    download_force_https: bool,
+
+    /// Force upload repositories by insecure protocol. Does not work with the upload_ssh flag
+    #[arg(long, env = "GTLBSTR_UPLOAD_FORCE_HTTP")]
+    upload_force_http: bool,
+
+    /// Force upload repositories by secure protocol. Does not work with the upload_ssh flag
+    #[arg(long, env = "GTLBSTR_UPLOAD_FORCE_HTTPS")]
+    upload_force_https: bool,
+
     /// Disable saving the directory hierarchy
     #[arg(long, env = "GTLBSTR_DISABLE_HIERARCHY")]
     disable_hierarchy: bool,
@@ -178,6 +196,30 @@ pub fn run() -> Result<()> {
         bail!(upl_err);
     }
 
+    if cli.download_force_http && cli.download_force_https {
+        bail!("You cannot use --download-force-http and --download-force-https flags together");
+    }
+
+    if cli.upload_force_http && cli.upload_force_https {
+        bail!("You cannot use --upload-force-http and --upload-force-https flags together");
+    }
+
+    let download_force_protocol = if cli.download_force_http {
+        ForceProtocol::Http
+    } else if cli.download_force_https {
+        ForceProtocol::Https
+    } else {
+        ForceProtocol::No
+    };
+
+    let upload_force_protocol = if cli.upload_force_http {
+        ForceProtocol::Http
+    } else if cli.upload_force_https {
+        ForceProtocol::Https
+    } else {
+        ForceProtocol::No
+    };
+
     let clone_params = CloneParams {
         fetch: fetch_gl,
         dst: cli.dst,
@@ -196,6 +238,8 @@ pub fn run() -> Result<()> {
         only_master: cli.only_master,
         disable_sync_date: cli.disable_sync_date,
         gitlab_timeout: cli.gitlab_timeout,
+        download_force_protocol,
+        upload_force_protocol,
     };
 
     clone(clone_params)

@@ -171,6 +171,14 @@ Options:
           Enable download by ssh instead of http. An authorized ssh key is required [env: GTLBSTR_DOWNLOAD_SSH=]
       --upload-ssh
           Enable upload by ssh instead of http. An authorized ssh key is required [env: GTLBSTR_UPLOAD_SSH=]
+      --download-force-http
+          Force download repositories by insecure protocol. Does not work with the download_ssh flag [env: GTLBSTR_DOWNLOAD_FORCE_HTTP=]
+      --download-force-https
+          Force download repositories by secure protocol. Does not work with the download_ssh flag [env: GTLBSTR_DOWNLOAD_FORCE_HTTPS=]
+      --upload-force-http
+          Force upload repositories by insecure protocol. Does not work with the upload_ssh flag [env: GTLBSTR_UPLOAD_FORCE_HTTP=]
+      --upload-force-https
+          Force upload repositories by secure protocol. Does not work with the upload_ssh flag [env: GTLBSTR_UPLOAD_FORCE_HTTPS=]
       --disable-hierarchy
           Disable saving the directory hierarchy [env: GTLBSTR_DISABLE_HIERARCHY=]
       --clear-dst
