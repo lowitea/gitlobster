@@ -157,7 +157,7 @@ impl Client {
     pub async fn make_project(
         &self,
         slug: String,
-        group_id: types::GroupId,
+        group_id: u32,
         info: &types::Project,
     ) -> reqwest::Result<types::Project> {
         #[derive(Serialize)]
@@ -165,7 +165,7 @@ impl Client {
             name: String,
             description: String,
             path: String,
-            namespace_id: types::GroupId,
+            namespace_id: u32,
         }
 
         let name = info.name.clone();
@@ -224,13 +224,13 @@ impl Client {
     pub async fn make_subgroup(
         &self,
         name: String,
-        parent_id: Option<types::GroupId>,
+        parent_id: Option<u32>,
     ) -> reqwest::Result<types::Group> {
         #[derive(Serialize)]
         struct MakeGroupRequest {
             name: String,
             path: String,
-            parent_id: Option<types::GroupId>,
+            parent_id: Option<u32>,
         }
 
         let path = name.clone();
