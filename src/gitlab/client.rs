@@ -1,10 +1,12 @@
-use crate::gitlab::types;
 use anyhow::Result;
 use chrono::Utc;
 use reqwest::{Method, RequestBuilder, Response};
 use serde::Serialize;
+use std::time::Duration;
 use tracing::info;
 use url::Url;
+
+use crate::gitlab::types;
 
 const API_VERSION: &str = "v4";
 
@@ -22,8 +24,13 @@ impl Client {
         mut url: Url,
         opp: Option<u32>,
         disable_sync_date: bool,
+        timeout: Option<u32>,
     ) -> Result<Self> {
-        let http = reqwest::Client::new();
+        let mut http = reqwest::ClientBuilder::new();
+        if let Some(timeout) = timeout {
+            http = http.timeout(Duration::from_secs(timeout.into()));
+        }
+        let http = http.build()?;
         let limit = if let Some(opp) = opp { opp } else { 1000 };
         let token = token.to_string();
 
