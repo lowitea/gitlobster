@@ -132,6 +132,10 @@ struct Cli {
     /// Disable adding sync dates in project descriptions
     #[arg(long, env = "GTLBSTR_DISABLE_SYNC_DATE")]
     disable_sync_date: bool,
+
+    /// Timeout for requests to GitLab instances in seconds
+    #[arg(long, env = "GTLBSTR_GITLAB_TIMEOUT")]
+    gitlab_timeout: Option<u32>,
 }
 
 pub fn run() -> Result<()> {
@@ -191,6 +195,7 @@ pub fn run() -> Result<()> {
         clear_dst: cli.clear_dst,
         only_master: cli.only_master,
         disable_sync_date: cli.disable_sync_date,
+        gitlab_timeout: cli.gitlab_timeout,
     };
 
     clone(clone_params)

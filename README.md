@@ -79,41 +79,6 @@ You can generate tokens on [the settings page](https://github.com/-/profile/pers
 
 If SSH copying is used, then ssh keys must be [added](https://gitlab.com/-/profile/keys) in GitLab.
 
-### Help command
-
-```text
-$ gitlobster --help
-
-A tool for cloning all available repositories in a GitLab instance
-
-Usage: gitlobster [OPTIONS] --fu <FETCH URL> --ft <FETCH TOKEN>
-
-Options:
-      --fu <FETCH URL>             The GitLab instance URL for fetch repositories (example: https://gitlab.local/) [env: GTLBSTR_FETCH_URL=]
-      --ft <FETCH TOKEN>           Your personal GitLab token for fetch repositories [env: GTLBSTR_FETCH_TOKEN=]
-      --bu <BACKUP URL>            The GitLab instance URL for backup repositories (example: https://backup-gitlab.local/) [env: GTLBSTR_BACKUP_URL=]
-      --bt <BACKUP TOKEN>          Your personal GitLab token for backup repositories [env: GTLBSTR_BACKUP_TOKEN=]
-      --bg <BACKUP GROUP>          A target created group on backup GitLab for push repositories [env: GTLBSTR_BACKUP_GROUP=]
-  -i, --include <PATTERN>          Include regexp patterns (cannot be used together with --exclude flag, may be repeated) [env: GTLBSTR_INCLUDE=]
-  -x, --exclude <PATTERN>          Comma separated exclude regexp patterns (cannot be used together with --include flag, may be repeated) [env: GTLBSTR_EXCLUDE=]
-  -d, --dst <DIRECTORY>            A destination local folder for save downloaded repositories [env: GTLBSTR_DST=]
-  -v, --verbose...                 Verbose level (one or more, max four)
-      --dry-run                    Show all projects to download
-      --objects-per-page <COUNT>   Low-level option, how many projects can fetch in one request [env: GTLBSTR_OBJECTS_PER_PAGE=]
-      --limit <COUNT>              Maximum projects to download [env: GTLBSTR_LIMIT=]
-      --concurrency-limit <LIMIT>  Limit concurrency download [env: GTLBSTR_CONCURRENCY_LIMIT=] [default: 21]
-      --only-owned                 Download projects explicitly owned by user [env: GTLBSTR_ONLY_OWNED=]
-      --only-membership            Download only user's projects [env: GTLBSTR_ONLY_MEMBERSHIP=]
-      --download-ssh               Enable download by ssh instead of http. An authorized ssh key is required [env: GTLBSTR_DOWNLOAD_SSH=]
-      --upload-ssh                 Enable upload by ssh instead of http. An authorized ssh key is required [env: GTLBSTR_UPLOAD_SSH=]
-      --disable-hierarchy          Disable saving the directory hierarchy [env: GTLBSTR_DISABLE_HIERARCHY=]
-      --clear-dst                  Clear dst path before cloning [env: GTLBSTR_CLEAR_DST=]
-      --only-master                Download only default branch [env: GTLBSTR_ONLY_MASTER=]
-      --disable-sync-date          Disable adding sync dates in project descriptions [env: GTLBSTR_DISABLE_SYNC_DATE=]
-  -h, --help                       Print help information
-  -V, --version                    Print version information
-```
-
 ### Copying all repositories to a second GitLab
 
 ```shell
@@ -160,6 +125,66 @@ docker run --rm -it -v $(pwd)/out:/out lowitea/gitlobster:latest \
     --fu=https://gitlab.com/ \
     --include='^gitlobster_test/example' \
     -d /out
+```
+
+### Help command
+
+```text
+$ gitlobster --help
+
+A tool for cloning all available repositories in a GitLab instance
+
+Usage: gitlobster [OPTIONS] --fu <FETCH URL> --ft <FETCH TOKEN>
+
+Options:
+      --fu <FETCH URL>
+          The GitLab instance URL for fetch repositories (example: https://gitlab.local/) [env: GTLBSTR_FETCH_URL=]
+      --ft <FETCH TOKEN>
+          Your personal GitLab token for fetch repositories [env: GTLBSTR_FETCH_TOKEN=]
+      --bu <BACKUP URL>
+          The GitLab instance URL for backup repositories (example: https://backup-gitlab.local/) [env: GTLBSTR_BACKUP_URL=]
+      --bt <BACKUP TOKEN>
+          Your personal GitLab token for backup repositories [env: GTLBSTR_BACKUP_TOKEN=]
+      --bg <BACKUP GROUP>
+          A target created group on backup GitLab for push repositories [env: GTLBSTR_BACKUP_GROUP=]
+  -i, --include <PATTERN>
+          Include regexp patterns (cannot be used together with --exclude flag, may be repeated) [env: GTLBSTR_INCLUDE=]
+  -x, --exclude <PATTERN>
+          Comma separated exclude regexp patterns (cannot be used together with --include flag, may be repeated) [env: GTLBSTR_EXCLUDE=]
+  -d, --dst <DIRECTORY>
+          A destination local folder for save downloaded repositories [env: GTLBSTR_DST=]
+  -v, --verbose...
+          Verbose level (one or more, max four)
+      --dry-run
+          Show all projects to download
+      --objects-per-page <COUNT>
+          Low-level option, how many projects can fetch in one request [env: GTLBSTR_OBJECTS_PER_PAGE=]
+      --limit <COUNT>
+          Maximum projects to download [env: GTLBSTR_LIMIT=]
+      --concurrency-limit <LIMIT>
+          Limit concurrency download [env: GTLBSTR_CONCURRENCY_LIMIT=] [default: 21]
+      --only-owned
+          Download projects explicitly owned by user [env: GTLBSTR_ONLY_OWNED=]
+      --only-membership
+          Download only user's projects [env: GTLBSTR_ONLY_MEMBERSHIP=]
+      --download-ssh
+          Enable download by ssh instead of http. An authorized ssh key is required [env: GTLBSTR_DOWNLOAD_SSH=]
+      --upload-ssh
+          Enable upload by ssh instead of http. An authorized ssh key is required [env: GTLBSTR_UPLOAD_SSH=]
+      --disable-hierarchy
+          Disable saving the directory hierarchy [env: GTLBSTR_DISABLE_HIERARCHY=]
+      --clear-dst
+          Clear dst path before cloning [env: GTLBSTR_CLEAR_DST=]
+      --only-master
+          Download only default branch [env: GTLBSTR_ONLY_MASTER=]
+      --disable-sync-date
+          Disable adding sync dates in project descriptions [env: GTLBSTR_DISABLE_SYNC_DATE=]
+      --gitlab-timeout <GITLAB_TIMEOUT>
+          Timeout for requests to GitLab instances in seconds [env: GTLBSTR_GITLAB_TIMEOUT=]
+  -h, --help
+          Print help
+  -V, --version
+          Print version
 ```
 
 ### Notice
