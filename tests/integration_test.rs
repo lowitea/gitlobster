@@ -61,7 +61,7 @@ mod tests {
         }
 
         let url_prefix = format!("{}api/v4/projects", GITLAB_HOST);
-        let project_path = "gitlobster_test%2Fupload%2Fgitlobster_test%2Fexample";
+        let project_path = "gitlobster_test%2Fupload2%2Fgitlobster_test%2Fexample";
         let p1_name = format!("{}%2Fproject_1", project_path);
         let p2_name = format!("{}%2Fproject_2", project_path);
         let p3_name = format!("{}%2Fsubgroup_1%2Fproject_3", project_path);
@@ -112,7 +112,7 @@ mod tests {
 
         let _ = fs::remove_dir_all(OUT_DIR);
         let url = format!(
-            "{}api/v4/groups/gitlobster_test%2Fupload%2Fgitlobster_test?access_token={}",
+            "{}api/v4/groups/gitlobster_test%2Fupload2%2Fgitlobster_test?access_token={}",
             GITLAB_HOST, gitlab_token
         );
         let _ = rqw::Client::new().delete(url).send();
@@ -125,7 +125,7 @@ mod tests {
             --fu={} \
             --bt={} \
             --bu={} \
-            --bg=gitlobster_test/upload \
+            --bg=gitlobster_test/upload2 \
             --only-owned \
             --include='^gitlobster_test/example' \
             --concurrency-limit=1 \
