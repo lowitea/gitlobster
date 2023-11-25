@@ -1,6 +1,6 @@
 [package]
 name = "gitlobster"
-version = "1.4.0"
+version = "1.4.1"
 edition = "2021"
 description = "A tool for cloning all available repositories in a GitLab instance"
 categories = ["development-tools", "command-line-utilities"]
