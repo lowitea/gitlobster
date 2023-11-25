@@ -83,7 +83,7 @@ struct Cli {
     /// Low-level option, how many projects can fetch in one request
     #[arg(
         long,
-        value_parser,
+        value_parser=clap::value_parser!(u32).range(1..101),
         env = "GTLBSTR_OBJECTS_PER_PAGE",
         value_name = "COUNT"
     )]

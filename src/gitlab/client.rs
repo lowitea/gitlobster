@@ -1,6 +1,6 @@
 use anyhow::Result;
 use chrono::Utc;
-use reqwest::{Method, RequestBuilder, Response};
+use reqwest::{header::HeaderValue, Method, RequestBuilder, Response};
 use serde::Serialize;
 use std::time::Duration;
 use tracing::info;
@@ -31,7 +31,7 @@ impl Client {
             http = http.timeout(Duration::from_secs(timeout.into()));
         }
         let http = http.build()?;
-        let limit = if let Some(opp) = opp { opp } else { 1000 };
+        let limit = if let Some(opp) = opp { opp } else { 100 };
         let token = token.to_string();
 
         url.set_path(&format!("api/{}", API_VERSION));
@@ -113,35 +113,71 @@ impl Client {
         self.exist(self.get_project(path).await)
     }
 
+    /// Parse value of Link header
+    /// ```
+    /// let link = r#"<https://gitlab.example.com/api/v4/projects?pagination=keyset&per_page=50&order_by=id&sort=asc&id_after=42>; rel="next""#;
+    /// let result = Client::parse_link_header(link);
+    /// assert_eq!(
+    ///     result,
+    ///     "https://gitlab.example.com/api/v4/projects?pagination=keyset&per_page=50&order_by=id&sort=asc&id_after=42"
+    /// )
+    /// ```
+    fn parse_link_header(link: &HeaderValue) -> String {
+        let invalid_link_msg = format!("invalid Link header ({:#?})", &link);
+        let link = link
+            .to_str()
+            .expect(&invalid_link_msg)
+            .split(";")
+            .next()
+            .expect(&invalid_link_msg);
+        if link.len() < 13 {
+            panic!("{}", invalid_link_msg);
+        }
+        link[1..link.len() - 1].to_string()
+    }
+
     pub async fn get_projects(
         &self,
         only_owned: bool,
         only_membership: bool,
     ) -> Result<Vec<types::Project>> {
         let mut projects: Vec<types::Project> = vec![];
-        let mut next_page = 1;
+        let mut next_page: Option<String> = None;
 
         loop {
-            let mut query = format!("per_page={}&page={}", &self.limit, next_page);
-            if only_owned {
-                query += "&owned=true"
-            }
-            if only_membership {
-                query += "&only_membership=true"
-            }
+            let query = if let Some(next_page) = next_page {
+                next_page
+                    .split("?")
+                    .last()
+                    .expect(&format!(
+                        "Invalid url returned in Link header from GitLab ({})",
+                        &next_page
+                    ))
+                    .to_string()
+            } else {
+                let mut query = format!(
+                    "pagination=keyset&order_by=id&sort=asc&per_page={}",
+                    &self.limit
+                );
+                if only_owned {
+                    query += "&owned=true"
+                }
+                if only_membership {
+                    query += "&only_membership=true"
+                }
+                query
+            };
             let resp = self
                 .request(Method::GET, "projects", Some(query), None::<()>)
                 .await?;
+
             let headers = resp.headers().clone();
+            let Some(link_header) = headers.get("link") else {
+                break;
+            };
+            next_page = Some(Client::parse_link_header(link_header));
 
             projects.append(&mut resp.json::<Vec<types::Project>>().await?);
-
-            let next_page_header = headers.get("x-next-page").unwrap();
-            if next_page_header.is_empty() {
-                break;
-            }
-
-            next_page += 1;
         }
 
         projects.retain(|p| !p.empty_repo);
