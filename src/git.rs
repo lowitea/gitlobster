@@ -35,7 +35,7 @@ async fn check_status(path: &String) -> Result<()> {
 async fn clone(src: &String, dst: &String) -> Result<()> {
     git(vec!["clone", src, dst]).await?;
     git(vec!["-C", dst, "remote", "rename", "origin", "upstream"]).await?;
-    git(vec!["config", "pull.rebase", "false"]).await?;
+    git(vec!["-C", dst, "config", "pull.rebase", "false"]).await?;
 
     Ok(())
 }
