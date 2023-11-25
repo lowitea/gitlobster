@@ -12,29 +12,24 @@ jobs:
       KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
       GTLBSTR_TEST_GITLAB_TOKEN: ${{ secrets.GTLBSTR_TEST_GITLAB_TOKEN }}
 
-  release-binaries:
-    name: release ${{ matrix.target }}
-    runs-on: ubuntu-latest
+  upload-assets:
+    name: release ${{ matrix.os }}
     needs: integration-tests
     strategy:
       fail-fast: false
       matrix:
-        target:
-          [
-            x86_64-pc-windows-gnu,
-            x86_64-unknown-linux-musl,
-            x86_64-apple-darwin,
-          ]
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      - uses: taiki-e/upload-rust-binary-action@v1
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          EXTRA_FILES: "README.md LICENSE"
-          MINIFY: true
+          bin: gitlobster
+          include: LICENSE,README.md
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   release-docker:
     name: release docker
