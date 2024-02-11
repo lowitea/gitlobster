@@ -27,7 +27,7 @@ pub struct Project {
     pub path_with_namespace: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct Group {
     pub id: u32,
     pub name: String,
