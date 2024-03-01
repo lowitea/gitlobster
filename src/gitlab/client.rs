@@ -127,7 +127,7 @@ impl Client {
         let link = link
             .to_str()
             .expect(&invalid_link_msg)
-            .split(";")
+            .split(';')
             .next()
             .expect(&invalid_link_msg);
         if link.len() < 13 {
@@ -147,12 +147,14 @@ impl Client {
         loop {
             let query = if let Some(next_page) = next_page {
                 next_page
-                    .split("?")
+                    .split('?')
                     .last()
-                    .expect(&format!(
-                        "Invalid url returned in Link header from GitLab ({})",
-                        &next_page
-                    ))
+                    .unwrap_or_else(|| {
+                        panic!(
+                            "Invalid url returned in Link header from GitLab ({})",
+                            &next_page
+                        )
+                    })
                     .to_string()
             } else {
                 let mut query = format!(
@@ -252,21 +254,22 @@ impl Client {
         .await
     }
 
-    pub async fn get_group(&self, path: String) -> reqwest::Result<types::Group> {
-        let path = urlencoding::encode(&path);
+    pub async fn get_group(&self, path: &str) -> reqwest::Result<types::Group> {
+        let path = urlencoding::encode(path);
         self.request(Method::GET, format!("groups/{}", path), None, None::<()>)
             .await?
             .json::<types::Group>()
             .await
     }
 
-    pub async fn group_exist(&self, path: String) -> reqwest::Result<Option<types::Group>> {
+    pub async fn group_exist(&self, path: &str) -> reqwest::Result<Option<types::Group>> {
         self.exist(self.get_group(path).await)
     }
 
     pub async fn make_subgroup(
         &self,
         name: String,
+        path: String,
         parent_id: Option<u32>,
     ) -> reqwest::Result<types::Group> {
         #[derive(Serialize)]
@@ -276,7 +279,6 @@ impl Client {
             parent_id: Option<u32>,
         }
 
-        let path = name.clone();
         let data = &MakeGroupRequest {
             name,
             path,
@@ -292,6 +294,7 @@ impl Client {
     pub async fn make_project_with_namespace(
         &self,
         mut path: Vec<String>,
+        groups: Vec<types::Group>,
         root_group: &Option<types::Group>,
         project_info: &types::Project,
     ) -> reqwest::Result<types::Project> {
@@ -302,16 +305,17 @@ impl Client {
             .map(|gr| gr.full_path.clone())
             .unwrap_or_default();
 
-        for group_name in path {
+        for group in groups {
             current_namespace = if current_namespace.is_empty() {
-                group_name.clone()
+                group.name.clone()
             } else {
-                format!("{}/{}", current_namespace, group_name)
+                format!("{}/{}", current_namespace, &group.path)
             };
-            let group = if let Some(group) = self.group_exist(current_namespace.clone()).await? {
+            let group = if let Some(group) = self.group_exist(&current_namespace).await? {
                 group
             } else {
-                self.make_subgroup(group_name, parent_id).await?
+                self.make_subgroup(group.name.clone(), group.path.clone(), parent_id)
+                    .await?
             };
 
             parent_id = Some(group.id);

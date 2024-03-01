@@ -1,13 +1,14 @@
-use futures::future::try_join_all;
-
-use pbr::ProgressBar;
-use regex::Regex;
-use tracing::{debug, info};
-use url::Url;
-
 use crate::gitlab::types;
 use crate::{git, gitlab};
 use anyhow::Result;
+use futures::future::try_join_all;
+use pbr::ProgressBar;
+use regex::Regex;
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use tracing::{debug, info};
+use url::Url;
 
 const TEMP_DIR: &str = "gitlobster";
 
@@ -112,6 +113,7 @@ fn make_git_path(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn clone_project(
     project: &types::Project,
     dst: &str,
@@ -120,6 +122,8 @@ async fn clone_project(
     backup: &Option<BackupData>,
     disable_hierarchy: bool,
     fetch_force_protocol: &ForceProtocol,
+    fetch_gl: &gitlab::Client,
+    groups_info: Arc<Mutex<HashMap<String, types::Group>>>,
 ) -> Result<()> {
     debug!("project path: {}", &project.path_with_namespace);
 
@@ -157,12 +161,33 @@ async fn clone_project(
             .collect()
     };
 
+    let mut last_group = String::new();
+    let mut project_groups: Vec<types::Group> = Vec::new();
+
+    for group in &path[..path.len() - 1] {
+        last_group = last_group + &group;
+        let g_info = {
+            let mut groups_info = groups_info.lock().await;
+
+            if let Some(g_info) = groups_info.get(&last_group) {
+                g_info.clone()
+            } else {
+                let g_info = fetch_gl.get_group(&last_group).await?;
+                groups_info.insert(last_group.clone(), g_info.clone());
+                g_info
+            }
+        };
+        project_groups.push(g_info);
+        last_group += "/";
+    }
+
     let backup_project = backup_gl
-        .make_project_with_namespace(path, backup_group, project)
+        .make_project_with_namespace(path, project_groups, backup_group, project)
         .await?;
 
     let remote = make_git_path(&backup_project, backup_git_http_auth, backup_force_protocol);
-    git::push_backup(format!("{}/{}", dst, p_path), remote).await
+    git::push_backup(format!("{}/{}", dst, p_path), remote).await?;
+    Ok(())
 }
 
 async fn make_git_http_auth(client: &gitlab::Client, token: &str) -> Result<String> {
@@ -232,7 +257,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
             p.gitlab_timeout,
         )?;
         let group = if let Some(gr) = backup.group {
-            Some(client.get_group(gr).await?)
+            Some(client.get_group(&gr).await?)
         } else {
             None
         };
@@ -283,6 +308,8 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     let mut pb = ProgressBar::new(projects.len() as u64);
     pb.message("Cloning: ");
 
+    let groups_cache = Arc::new(Mutex::new(HashMap::new()));
+
     for chunk in projects.chunks(p.concurrency_limit) {
         try_join_all(chunk.iter().map(|pr| {
             clone_project(
@@ -293,6 +320,8 @@ pub async fn clone(p: CloneParams) -> Result<()> {
                 &backup_data,
                 p.disable_hierarchy,
                 &p.download_force_protocol,
+                &fetch_gl,
+                groups_cache.clone(),
             )
         }))
         .await?;
