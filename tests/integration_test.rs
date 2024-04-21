@@ -170,7 +170,8 @@ mod tests {
 
     #[test]
     fn test_general() {
-        let gitlab_token = env!("GTLBSTR_TEST_GITLAB_TOKEN");
+        let gitlab_token = option_env!("GTLBSTR_TEST_GITLAB_TOKEN");
+        let gitlab_token = gitlab_token.expect("required GTLBSTR_TEST_GITLAB_TOKEN env");
 
         cleanup(gitlab_token);
 
