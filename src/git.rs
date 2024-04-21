@@ -34,13 +34,19 @@ async fn check_status(path: &String) -> Result<()> {
 
 async fn clone(src: &String, dst: &String) -> Result<()> {
     git(vec!["clone", src, dst]).await?;
-    git(vec!["-C", dst, "remote", "rename", "origin", "upstream"]).await?;
     git(vec!["-C", dst, "config", "pull.rebase", "false"]).await?;
 
     Ok(())
 }
 
 async fn update(path: &String, only_master: bool) -> Result<()> {
+    // In older versions of GitLobster, we used to rename the "origin" remote to "upstream".
+    // For backward compatibility, we should revert the default remote name back to "origin",
+    // while we don't increase the major version number.
+    git(vec!["-C", path, "remote", "rename", "upstream", "origin"])
+        .await
+        .ok();
+
     if only_master {
         git(vec!["-C", path, "pull"]).await?;
         return Ok(());
@@ -53,10 +59,10 @@ async fn update(path: &String, only_master: bool) -> Result<()> {
         .split('\n')
         .map(|v| v.trim())
         .filter(|v| !v.is_empty())
-        .filter(|v| !v.starts_with("remotes/upstream/HEAD"))
+        .filter(|v| !v.starts_with("remotes/origin/HEAD"))
         .filter(|v| !v.starts_with("remotes/backup"));
 
-    let remote_prefix = "remotes/upstream/";
+    let remote_prefix = "remotes/origin/";
     let mut remote_branches: Vec<&str> = vec![];
     let mut default_branch = "";
 
@@ -85,7 +91,7 @@ async fn update(path: &String, only_master: bool) -> Result<()> {
         }
     }
 
-    git(vec!["-C", path, "pull", "upstream", default_branch]).await?;
+    git(vec!["-C", path, "pull", "origin", default_branch]).await?;
 
     Ok(())
 }
