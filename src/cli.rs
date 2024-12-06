@@ -111,6 +111,10 @@ struct Cli {
     #[arg(long, env = "GTLBSTR_ONLY_MEMBERSHIP")]
     only_membership: bool,
 
+    /// Download projects only in group
+    #[arg(long, env = "GTLBSTR_GROUP")]
+    group: Option<String>,
+
     /// Enable download by ssh instead of http. An authorized ssh key is required
     #[arg(long, env = "GTLBSTR_DOWNLOAD_SSH")]
     download_ssh: bool,
@@ -226,6 +230,7 @@ pub fn run() -> Result<()> {
         backup: backup_gl,
         patterns,
         dry_run: cli.dry_run,
+        group: cli.group,
         objects_per_page: cli.objects_per_page,
         limit: cli.limit,
         concurrency_limit: cli.concurrency_limit,
