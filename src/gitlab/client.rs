@@ -184,6 +184,8 @@ impl Client {
 
             let headers = resp.headers().clone();
 
+            projects.append(&mut resp.json::<Vec<types::Project>>().await?);
+
             match headers.get("x-next-page") {
                 None => break,
                 Some(has_next_page) => {
@@ -206,7 +208,6 @@ impl Client {
                 next_page_link_position,
             ));
 
-            projects.append(&mut resp.json::<Vec<types::Project>>().await?);
             next_page_link_position = 1;
         }
 
