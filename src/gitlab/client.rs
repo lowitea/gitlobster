@@ -147,9 +147,7 @@ impl Client {
 
         let method = match group {
             None => "projects".to_owned(),
-            Some(group) => format!(
-                "groups/{}/projects",
-                group)
+            Some(group) => format!("groups/{}/projects", group),
         };
 
         let mut next_page_link_position = 0;
@@ -167,43 +165,46 @@ impl Client {
                     })
                     .to_string()
             } else {
-                let mut query = format!(
-                    "order_by=id&sort=asc&per_page={}",
-                    &self.limit
-                );
+                let mut query = format!("order_by=id&sort=asc&per_page={}", &self.limit);
                 if only_owned {
                     query += "&owned=true"
                 }
                 if only_membership {
                     query += "&only_membership=true"
                 }
-                if method!="project" {
+                if method != "project" {
                     query += "&include_subgroups=true"
                 }
                 query
             };
-           
+
             let resp = self
                 .request(Method::GET, &method, Some(query), None::<()>)
                 .await?;
 
             let headers = resp.headers().clone();
 
-            match headers.get("x-next-page"){
+            match headers.get("x-next-page") {
                 None => break,
-                Some(has_next_page)=> {
-                   if has_next_page.to_str().expect("Invalid x-next-page header").is_empty(){
-                    break;
-                   }
+                Some(has_next_page) => {
+                    if has_next_page
+                        .to_str()
+                        .expect("Invalid x-next-page header")
+                        .is_empty()
+                    {
+                        break;
+                    }
                 }
             }
-            
+
             let Some(link_header) = headers.get("link") else {
                 break;
-            };                        
+            };
 
-            next_page = Some(Client::parse_link_header(link_header, next_page_link_position));
-           
+            next_page = Some(Client::parse_link_header(
+                link_header,
+                next_page_link_position,
+            ));
 
             projects.append(&mut resp.json::<Vec<types::Project>>().await?);
             next_page_link_position = 1;
