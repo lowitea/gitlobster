@@ -31,10 +31,10 @@ impl Client {
             http = http.timeout(Duration::from_secs(timeout.into()));
         }
         let http = http.build()?;
-        let limit = if let Some(opp) = opp { opp } else { 100 };
+        let limit = opp.unwrap_or(100);
         let token = token.to_string();
 
-        url.set_path(&format!("api/{}", API_VERSION));
+        url.set_path(&format!("api/{API_VERSION}"));
 
         Ok(Client {
             url,
@@ -68,7 +68,7 @@ impl Client {
             .header("PRIVATE-TOKEN", &self.token);
 
         if let Some(json) = json {
-            req = req.json(&json)
+            req = req.json(&json);
         }
 
         req
@@ -89,13 +89,13 @@ impl Client {
 
     pub async fn get_project(&self, path: String) -> reqwest::Result<types::Project> {
         let path = urlencoding::encode(&path);
-        self.request(Method::GET, format!("projects/{}", path), None, None::<()>)
+        self.request(Method::GET, format!("projects/{path}"), None, None::<()>)
             .await?
             .json::<types::Project>()
             .await
     }
 
-    fn exist<T>(&self, resp: reqwest::Result<T>) -> reqwest::Result<Option<T>> {
+    fn check_exists<T>(resp: reqwest::Result<T>) -> reqwest::Result<Option<T>> {
         match resp {
             Ok(p) => Ok(Some(p)),
             Err(e) => {
@@ -110,7 +110,7 @@ impl Client {
     }
 
     pub async fn project_exist(&self, path: String) -> reqwest::Result<Option<types::Project>> {
-        self.exist(self.get_project(path).await)
+        Client::check_exists(self.get_project(path).await)
     }
 
     /// Parse value of Link header
@@ -130,9 +130,7 @@ impl Client {
             .split(';')
             .nth(next_page_link_position)
             .expect(&invalid_link_msg);
-        if link.len() < 13 {
-            panic!("{}", invalid_link_msg);
-        }
+        assert!(link.len() >= 13, "{}", invalid_link_msg);
         link[1..link.len() - 1].to_string()
     }
 
@@ -147,7 +145,7 @@ impl Client {
 
         let method = match group {
             None => "projects".to_owned(),
-            Some(group) => format!("groups/{}/projects", group),
+            Some(group) => format!("groups/{group}/projects"),
         };
 
         let mut next_page_link_position = 0;
@@ -167,13 +165,13 @@ impl Client {
             } else {
                 let mut query = format!("order_by=id&sort=asc&per_page={}", &self.limit);
                 if only_owned {
-                    query += "&owned=true"
+                    query += "&owned=true";
                 }
                 if only_membership {
-                    query += "&only_membership=true"
+                    query += "&only_membership=true";
                 }
                 if method != "projects" {
-                    query += "&include_subgroups=true"
+                    query += "&include_subgroups=true";
                 }
                 query
             };
@@ -186,17 +184,13 @@ impl Client {
 
             projects.append(&mut resp.json::<Vec<types::Project>>().await?);
 
-            match headers.get("x-next-page") {
-                None => break,
-                Some(has_next_page) => {
-                    if has_next_page
-                        .to_str()
-                        .expect("Invalid x-next-page header")
-                        .is_empty()
-                    {
-                        break;
-                    }
-                }
+            let has_next_page = match headers.get("x-next-page") {
+                Some(h) => !h.to_str().expect("Invalid x-next-page header").is_empty(),
+                None => false,
+            };
+
+            if !has_next_page {
+                break;
             }
 
             let Some(link_header) = headers.get("link") else {
@@ -285,14 +279,14 @@ impl Client {
 
     pub async fn get_group(&self, path: &str) -> reqwest::Result<types::Group> {
         let path = urlencoding::encode(path);
-        self.request(Method::GET, format!("groups/{}", path), None, None::<()>)
+        self.request(Method::GET, format!("groups/{path}"), None, None::<()>)
             .await?
             .json::<types::Group>()
             .await
     }
 
     pub async fn group_exist(&self, path: &str) -> reqwest::Result<Option<types::Group>> {
-        self.exist(self.get_group(path).await)
+        Client::check_exists(self.get_group(path).await)
     }
 
     pub async fn make_subgroup(
@@ -351,7 +345,7 @@ impl Client {
         }
 
         match self
-            .project_exist(format!("{}/{}", current_namespace, project_slug))
+            .project_exist(format!("{current_namespace}/{project_slug}"))
             .await?
         {
             Some(p) => self.update_project(&p, project_info).await,

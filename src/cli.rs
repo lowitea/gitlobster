@@ -9,7 +9,7 @@ use anyhow::{bail, Result};
 #[command(author, version, about)]
 /// A tool for cloning all available repositories in a GitLab instance
 struct Cli {
-    /// The GitLab instance URL for fetch repositories (example: https://gitlab.local/)
+    /// The GitLab instance URL for fetch repositories (example: <https://gitlab.local>)
     #[arg(
         long,
         value_parser,
@@ -27,7 +27,7 @@ struct Cli {
     )]
     ft: String,
 
-    /// The GitLab instance URL for backup repositories (example: https://backup-gitlab.local/)
+    /// The GitLab instance URL for backup repositories (example: <https://backup-gitlab.local>)
     #[arg(
         long,
         value_parser,
@@ -123,19 +123,19 @@ struct Cli {
     #[arg(long, env = "GTLBSTR_UPLOAD_SSH")]
     upload_ssh: bool,
 
-    /// Force download repositories by insecure protocol. Does not work with the download_ssh flag
+    /// Force download repositories by insecure protocol. Does not work with the `download_ssh` flag
     #[arg(long, env = "GTLBSTR_DOWNLOAD_FORCE_HTTP")]
     download_force_http: bool,
 
-    /// Force download repositories by secure protocol. Does not work with the download_ssh flag
+    /// Force download repositories by secure protocol. Does not work with the `download_ssh` flag
     #[arg(long, env = "GTLBSTR_DOWNLOAD_FORCE_HTTPS")]
     download_force_https: bool,
 
-    /// Force upload repositories by insecure protocol. Does not work with the upload_ssh flag
+    /// Force upload repositories by insecure protocol. Does not work with the `upload_ssh` flag
     #[arg(long, env = "GTLBSTR_UPLOAD_FORCE_HTTP")]
     upload_force_http: bool,
 
-    /// Force upload repositories by secure protocol. Does not work with the upload_ssh flag
+    /// Force upload repositories by secure protocol. Does not work with the `upload_ssh` flag
     #[arg(long, env = "GTLBSTR_UPLOAD_FORCE_HTTPS")]
     upload_force_https: bool,
 
@@ -172,7 +172,7 @@ pub fn run() -> Result<()> {
     };
     tracing_subscriber::fmt().with_max_level(log_level).init();
 
-    let fetch_gl = FetchGitlabOptions::new(cli.fu, cli.ft)?;
+    let fetch_gl = FetchGitlabOptions::new(&cli.fu, &cli.ft)?;
 
     let patterns = if cli.exclude.is_some() && cli.include.is_some() {
         bail!("You cannot use the --include and --exclude flag together");
@@ -184,11 +184,7 @@ pub fn run() -> Result<()> {
 
     let upl_err = "For upload to another gitlab, you must specify both the --bt and --bu flags";
     let backup_gl = if let (Some(url), Some(token)) = (&cli.bu, &cli.bt) {
-        Some(BackupGitlabOptions::new(
-            url.clone(),
-            token.clone(),
-            cli.bg.clone(),
-        )?)
+        Some(BackupGitlabOptions::new(url, token, cli.bg.clone())?)
     } else {
         if cli.bu.is_some() || cli.bt.is_some() {
             bail!(upl_err);

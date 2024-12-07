@@ -57,7 +57,7 @@ async fn update(path: &String, only_master: bool) -> Result<()> {
     let branches_out = git(vec!["-C", path, "branch", "-la"]).await?;
     let branches = branches_out
         .split('\n')
-        .map(|v| v.trim())
+        .map(str::trim)
         .filter(|v| !v.is_empty())
         .filter(|v| !v.starts_with("remotes/origin/HEAD"))
         .filter(|v| !v.starts_with("remotes/backup"));
@@ -104,17 +104,17 @@ async fn add_remote_backup(path: &String, remote: String) -> Result<()> {
 
 async fn push_all_remote_backup(path: String) -> Result<()> {
     if let Err(e) = git(vec!["-C", &path, "push", "-u", "backup", "--all"]).await {
-        error!("{}", e)
+        error!("{}", e);
     };
     if let Err(e) = git(vec!["-C", &path, "push", "-u", "backup", "--tags"]).await {
-        error!("{}", e)
+        error!("{}", e);
     };
     Ok(())
 }
 
 pub async fn fetch(src: String, dst: String, only_master: bool) -> Result<()> {
     match check_status(&dst).await {
-        Ok(_) => (),
+        Ok(()) => (),
         Err(_) => clone(&src, &dst).await?,
     };
     update(&dst, only_master).await

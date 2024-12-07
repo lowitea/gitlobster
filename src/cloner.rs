@@ -19,9 +19,12 @@ pub struct FetchGitlabOptions {
 }
 
 impl FetchGitlabOptions {
-    pub fn new(url: String, token: String) -> Result<Self> {
-        let url = Url::parse(&url)?;
-        Ok(Self { url, token })
+    pub fn new(url: &str, token: &str) -> Result<Self> {
+        let url = Url::parse(url)?;
+        Ok(Self {
+            url,
+            token: token.to_string(),
+        })
     }
 }
 
@@ -33,9 +36,13 @@ pub struct BackupGitlabOptions {
 }
 
 impl BackupGitlabOptions {
-    pub fn new(url: String, token: String, group: Option<String>) -> Result<Self> {
-        let url = Url::parse(&url)?;
-        Ok(Self { url, token, group })
+    pub fn new(url: &str, token: &str, group: Option<String>) -> Result<Self> {
+        let url = Url::parse(url)?;
+        Ok(Self {
+            url,
+            token: token.to_string(),
+            group,
+        })
     }
 }
 
@@ -99,9 +106,7 @@ fn make_git_path(
 ) -> String {
     if let Some(auth) = git_http_auth {
         let parts: Vec<&str> = project.http_url_to_repo.split("://").collect();
-        if parts.len() != 2 {
-            panic!("project with incorrect http path")
-        }
+        assert!(parts.len() == 2, "project with incorrect http path");
         let protocol = match force_protocol {
             ForceProtocol::No => parts[0],
             ForceProtocol::Http => "http",
@@ -165,7 +170,7 @@ async fn clone_project(
     let mut project_groups: Vec<types::Group> = Vec::new();
 
     for group in &path[..path.len() - 1] {
-        last_group = last_group + &group;
+        last_group += group;
         let g_info = {
             let mut groups_info = groups_info.lock().await;
 
@@ -186,7 +191,7 @@ async fn clone_project(
         .await?;
 
     let remote = make_git_path(&backup_project, backup_git_http_auth, backup_force_protocol);
-    git::push_backup(format!("{}/{}", dst, p_path), remote).await?;
+    git::push_backup(format!("{dst}/{p_path}"), remote).await?;
     Ok(())
 }
 
@@ -240,7 +245,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     }
 
     if let Some(patterns) = p.patterns {
-        projects = filter_projects(projects, patterns, p.limit)?
+        projects = filter_projects(projects, patterns, p.limit)?;
     }
 
     if projects.is_empty() {
@@ -254,7 +259,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     };
 
     if p.clear_dst {
-        clear_dst(&dst)
+        clear_dst(&dst);
     }
 
     let backup_data = if let Some(backup) = p.backup {
@@ -298,7 +303,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
                 println!(
                     "Backup group:   {} (id: {}, path: {})",
                     g.name, g.id, g.full_path
-                )
+                );
             };
         }
         println!("Local out dir: {}", &dst);
