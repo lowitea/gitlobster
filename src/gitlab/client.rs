@@ -172,7 +172,7 @@ impl Client {
                 if only_membership {
                     query += "&only_membership=true"
                 }
-                if method != "project" {
+                if method != "projects" {
                     query += "&include_subgroups=true"
                 }
                 query
