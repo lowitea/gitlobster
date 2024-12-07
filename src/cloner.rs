@@ -1,6 +1,6 @@
 use crate::gitlab::types;
 use crate::{git, gitlab};
-use anyhow::Result;
+use anyhow::{bail, Result};
 use futures::future::try_join_all;
 use pbr::ProgressBar;
 use regex::Regex;
@@ -235,8 +235,16 @@ pub async fn clone(p: CloneParams) -> Result<()> {
         .get_projects(p.group, p.only_owned, p.only_membership)
         .await?;
 
+    if projects.is_empty() {
+        bail!("Projects not found in GitLab");
+    }
+
     if let Some(patterns) = p.patterns {
         projects = filter_projects(projects, patterns, p.limit)?
+    }
+
+    if projects.is_empty() {
+        bail!("All projects filtered out");
     }
 
     let dst = if let Some(dst) = p.dst {
