@@ -203,6 +203,7 @@ pub struct CloneParams {
     pub fetch: FetchGitlabOptions,
     pub dst: Option<String>,
     pub backup: Option<BackupGitlabOptions>,
+    pub group: Option<String>,
     pub patterns: Option<FilterPatterns>,
     pub dry_run: bool,
     pub objects_per_page: Option<u32>,
@@ -231,7 +232,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
         p.gitlab_timeout,
     )?;
     let mut projects = fetch_gl
-        .get_projects(p.only_owned, p.only_membership)
+        .get_projects(p.group, p.only_owned, p.only_membership)
         .await?;
 
     if let Some(patterns) = p.patterns {

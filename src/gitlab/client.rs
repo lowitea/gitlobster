@@ -115,20 +115,20 @@ impl Client {
 
     /// Parse value of Link header
     /// ```
-    /// let link = r#"<https://gitlab.example.com/api/v4/projects?pagination=keyset&per_page=50&order_by=id&sort=asc&id_after=42>; rel="next""#;
+    /// let link = r#"<https://gitlab.example.com/api/v4/projects?per_page=50&order_by=id&sort=asc; rel="next""#;
     /// let result = Client::parse_link_header(link);
     /// assert_eq!(
     ///     result,
-    ///     "https://gitlab.example.com/api/v4/projects?pagination=keyset&per_page=50&order_by=id&sort=asc&id_after=42"
+    ///     "https://gitlab.example.com/api/v4/projects?per_page=50&order_by=id&sort=asc"
     /// )
     /// ```
-    fn parse_link_header(link: &HeaderValue) -> String {
+    fn parse_link_header(link: &HeaderValue, next_page_link_position: usize) -> String {
         let invalid_link_msg = format!("invalid Link header ({:#?})", &link);
         let link = link
             .to_str()
             .expect(&invalid_link_msg)
             .split(';')
-            .next()
+            .nth(next_page_link_position)
             .expect(&invalid_link_msg);
         if link.len() < 13 {
             panic!("{}", invalid_link_msg);
@@ -138,11 +138,19 @@ impl Client {
 
     pub async fn get_projects(
         &self,
+        group: Option<String>,
         only_owned: bool,
         only_membership: bool,
     ) -> Result<Vec<types::Project>> {
         let mut projects: Vec<types::Project> = vec![];
         let mut next_page: Option<String> = None;
+
+        let method = match group {
+            None => "projects".to_owned(),
+            Some(group) => format!("groups/{}/projects", group),
+        };
+
+        let mut next_page_link_position = 0;
 
         loop {
             let query = if let Some(next_page) = next_page {
@@ -157,29 +165,49 @@ impl Client {
                     })
                     .to_string()
             } else {
-                let mut query = format!(
-                    "pagination=keyset&order_by=id&sort=asc&per_page={}",
-                    &self.limit
-                );
+                let mut query = format!("order_by=id&sort=asc&per_page={}", &self.limit);
                 if only_owned {
                     query += "&owned=true"
                 }
                 if only_membership {
                     query += "&only_membership=true"
                 }
+                if method != "projects" {
+                    query += "&include_subgroups=true"
+                }
                 query
             };
+
             let resp = self
-                .request(Method::GET, "projects", Some(query), None::<()>)
+                .request(Method::GET, &method, Some(query), None::<()>)
                 .await?;
 
             let headers = resp.headers().clone();
+
+            match headers.get("x-next-page") {
+                None => break,
+                Some(has_next_page) => {
+                    if has_next_page
+                        .to_str()
+                        .expect("Invalid x-next-page header")
+                        .is_empty()
+                    {
+                        break;
+                    }
+                }
+            }
+
             let Some(link_header) = headers.get("link") else {
                 break;
             };
-            next_page = Some(Client::parse_link_header(link_header));
+
+            next_page = Some(Client::parse_link_header(
+                link_header,
+                next_page_link_position,
+            ));
 
             projects.append(&mut resp.json::<Vec<types::Project>>().await?);
+            next_page_link_position = 1;
         }
 
         projects.retain(|p| !p.empty_repo);
