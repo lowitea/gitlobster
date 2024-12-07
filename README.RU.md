@@ -167,6 +167,8 @@ Options:
           Download projects explicitly owned by user [env: GTLBSTR_ONLY_OWNED=]
       --only-membership
           Download only user's projects [env: GTLBSTR_ONLY_MEMBERSHIP=]
+      --group <GROUP>
+          Download projects only in group [env: GTLBSTR_GROUP=]
       --download-ssh
           Enable download by ssh instead of http. An authorized ssh key is required [env: GTLBSTR_DOWNLOAD_SSH=]
       --upload-ssh
