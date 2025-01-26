@@ -193,6 +193,8 @@ Options:
           Timeout for requests to GitLab instances in seconds [env: GTLBSTR_GITLAB_TIMEOUT=]
       --continue-on-error
           Continue downloading if there are any errors [env: GTLBSTR_CONTINUE_ON_ERROR=]
+      --exclude-archived
+          Exclude archived projects
   -h, --help
           Print help
   -V, --version

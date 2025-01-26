@@ -162,6 +162,10 @@ struct Cli {
     /// Continue downloading if a project cloning error occurs
     #[arg(long, env = "GTLBSTR_CONTINUE_ON_ERROR")]
     continue_on_error: bool,
+
+    /// Exclude archived projects
+    #[arg(long, env = "GTLBSTR_EXCLUDE_ARCHIVED")]
+    exclude_archived: bool,
 }
 
 pub fn run() -> Result<()> {
@@ -246,6 +250,7 @@ pub fn run() -> Result<()> {
         download_force_protocol,
         upload_force_protocol,
         continue_on_error: cli.continue_on_error,
+        exclude_archived: cli.exclude_archived,
     };
 
     clone(clone_params)

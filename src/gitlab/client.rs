@@ -139,6 +139,7 @@ impl Client {
         group: Option<String>,
         only_owned: bool,
         only_membership: bool,
+        exclude_archived: bool,
     ) -> Result<Vec<types::Project>> {
         let mut projects: Vec<types::Project> = vec![];
         let mut next_page: Option<String> = None;
@@ -169,6 +170,9 @@ impl Client {
                 }
                 if only_membership {
                     query += "&only_membership=true";
+                }
+                if exclude_archived {
+                    query += "&archived=false";
                 }
                 if method != "projects" {
                     query += "&include_subgroups=true";

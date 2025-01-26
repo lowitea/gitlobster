@@ -226,6 +226,7 @@ pub struct CloneParams {
     pub download_force_protocol: ForceProtocol,
     pub upload_force_protocol: ForceProtocol,
     pub continue_on_error: bool,
+    pub exclude_archived: bool,
 }
 
 #[tokio::main]
@@ -238,7 +239,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
         p.gitlab_timeout,
     )?;
     let mut projects = fetch_gl
-        .get_projects(p.group, p.only_owned, p.only_membership)
+        .get_projects(p.group, p.only_owned, p.only_membership, p.exclude_archived)
         .await?;
 
     if projects.is_empty() {
