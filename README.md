@@ -191,6 +191,8 @@ Options:
           Disable adding sync dates in project descriptions [env: GTLBSTR_DISABLE_SYNC_DATE=]
       --gitlab-timeout <GITLAB_TIMEOUT>
           Timeout for requests to GitLab instances in seconds [env: GTLBSTR_GITLAB_TIMEOUT=]
+      --continue-on-error
+          Continue downloading if a project cloning error occurs [env: GTLBSTR_CONTINUE_ON_ERROR=]
   -h, --help
           Print help
   -V, --version

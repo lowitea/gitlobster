@@ -158,6 +158,10 @@ struct Cli {
     /// Timeout for requests to GitLab instances in seconds
     #[arg(long, env = "GTLBSTR_GITLAB_TIMEOUT")]
     gitlab_timeout: Option<u32>,
+
+    /// Continue downloading if a project cloning error occurs
+    #[arg(long, env = "GTLBSTR_CONTINUE_ON_ERROR")]
+    continue_on_error: bool,
 }
 
 pub fn run() -> Result<()> {
@@ -241,6 +245,7 @@ pub fn run() -> Result<()> {
         gitlab_timeout: cli.gitlab_timeout,
         download_force_protocol,
         upload_force_protocol,
+        continue_on_error: cli.continue_on_error,
     };
 
     clone(clone_params)

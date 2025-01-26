@@ -1,13 +1,13 @@
 use crate::gitlab::types;
 use crate::{git, gitlab};
 use anyhow::{bail, Result};
-use futures::future::try_join_all;
+use futures::future::join_all;
 use pbr::ProgressBar;
 use regex::Regex;
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{debug, info};
+use tracing::{error, info};
 use url::Url;
 
 const TEMP_DIR: &str = "gitlobster";
@@ -130,7 +130,7 @@ async fn clone_project(
     fetch_gl: &gitlab::Client,
     groups_info: Arc<Mutex<HashMap<String, types::Group>>>,
 ) -> Result<()> {
-    debug!("project path: {}", &project.path_with_namespace);
+    info!("project path: {}", &project.path_with_namespace);
 
     let src = make_git_path(project, fetch_git_http_auth, fetch_force_protocol);
     let p_path = if disable_hierarchy {
@@ -225,6 +225,7 @@ pub struct CloneParams {
     pub gitlab_timeout: Option<u32>,
     pub download_force_protocol: ForceProtocol,
     pub upload_force_protocol: ForceProtocol,
+    pub continue_on_error: bool,
 }
 
 #[tokio::main]
@@ -325,7 +326,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     let groups_cache = Arc::new(Mutex::new(HashMap::new()));
 
     for chunk in projects.chunks(p.concurrency_limit) {
-        try_join_all(chunk.iter().map(|pr| {
+        let result: Result<Vec<()>> = join_all(chunk.iter().map(|pr| {
             clone_project(
                 pr,
                 &dst,
@@ -338,7 +339,19 @@ pub async fn clone(p: CloneParams) -> Result<()> {
                 groups_cache.clone(),
             )
         }))
-        .await?;
+        .await
+        .into_iter()
+        .collect();
+        if result.is_err() {
+            if p.continue_on_error {
+                error!(
+                    "Error while cloning: {} (please run with `-vv` for more details)",
+                    result.unwrap_err()
+                );
+            } else {
+                result?;
+            }
+        }
         pb.add(chunk.len() as u64);
     }
 
