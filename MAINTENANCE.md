@@ -29,7 +29,7 @@
 1. Make a new git tag
 
    ```shell
-   git tag <NEW_VERSION>
+   git tag -a <NEW_VERSION>
    ```
 
 1. Push all to upstream
