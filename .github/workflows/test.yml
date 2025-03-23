@@ -18,59 +18,47 @@ jobs:
           skip_after_successful_duplicate: "true"
           paths_ignore: '["**/*.md", "**/*.svg", "**/*.png", ".gitignore"]'
 
-  code_check:
+  lint_check:
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Install toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          profile: minimal
-          toolchain: stable
-          components: clippy
-          override: true
+          toolchain: "1.82"
+          components: clippy, rustfmt
       - name: Checking code format
         run: cargo fmt -- --check --config use_try_shorthand=true
-      - name: Install required cargo
-        run: cargo install clippy-sarif sarif-fmt
-      - name: Run rust-clippy
-        run: cargo clippy
-          --all-features
-          --tests
-          --benches
-          --message-format=json
-          --
-          -D warnings | clippy-sarif | tee rust-clippy-results.sarif | sarif-fmt
-        continue-on-error: true
-        env:
-          GTLBSTR_TEST_GITLAB_TOKEN: ""
+      - name: Clippy
+        uses: clechasseur/rs-clippy-check@v3
+        with:
+          args: --all-features --bins --examples --tests --benches -- -W clippy::all -W clippy::pedantic -D warnings
 
   unit_tests:
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/cache@v2
+      - uses: actions/checkout@v4
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Install toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable
-          override: true
+          toolchain: "1.82"
       - name: Run tests
         run: cargo test
