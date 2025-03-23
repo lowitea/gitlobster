@@ -20,7 +20,11 @@ pub struct FetchGitlabOptions {
 
 impl FetchGitlabOptions {
     pub fn new(url: &str, token: &str) -> Result<Self> {
-        let url = Url::parse(url)?;
+        let mut url = url.to_string();
+        if !url.ends_with('/') {
+            url += "/";
+        };
+        let url = Url::parse(&url)?;
         Ok(Self {
             url,
             token: token.to_string(),
@@ -37,7 +41,11 @@ pub struct BackupGitlabOptions {
 
 impl BackupGitlabOptions {
     pub fn new(url: &str, token: &str, group: Option<String>) -> Result<Self> {
-        let url = Url::parse(url)?;
+        let mut url = url.to_string();
+        if !url.ends_with('/') {
+            url += "/";
+        };
+        let url = Url::parse(&url)?;
         Ok(Self {
             url,
             token: token.to_string(),
@@ -235,7 +243,7 @@ pub struct CloneParams {
 pub async fn clone(p: CloneParams) -> Result<()> {
     let fetch_gl = gitlab::Client::new(
         &p.fetch.token,
-        p.fetch.url,
+        &p.fetch.url,
         p.objects_per_page,
         true,
         p.gitlab_timeout,
@@ -269,7 +277,7 @@ pub async fn clone(p: CloneParams) -> Result<()> {
     let backup_data = if let Some(backup) = p.backup {
         let client = gitlab::Client::new(
             &backup.token,
-            backup.url,
+            &backup.url,
             None,
             p.disable_sync_date,
             p.gitlab_timeout,

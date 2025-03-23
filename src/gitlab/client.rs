@@ -21,7 +21,7 @@ pub struct Client {
 impl Client {
     pub fn new(
         token: &str,
-        mut url: Url,
+        url: &Url,
         opp: Option<u32>,
         disable_sync_date: bool,
         timeout: Option<u32>,
@@ -34,7 +34,7 @@ impl Client {
         let limit = opp.unwrap_or(100);
         let token = token.to_string();
 
-        url.set_path(&format!("api/{API_VERSION}"));
+        let url = url.join(&format!("api/{API_VERSION}/")).unwrap();
 
         Ok(Client {
             url,
@@ -52,8 +52,7 @@ impl Client {
         query: Option<String>,
         json: Option<J>,
     ) -> RequestBuilder {
-        let mut url = self.url.clone();
-        url.set_path(&format!("{}/{}", url.path(), path.into()));
+        let mut url = self.url.join(&path.into()).unwrap();
 
         if let Some(query) = query {
             url.set_query(Some(&query));
