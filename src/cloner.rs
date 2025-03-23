@@ -204,6 +204,7 @@ fn clear_dst(dst: &str) {
     let _ = std::fs::remove_dir_all(dst);
 }
 
+#[allow(clippy::struct_excessive_bools)]
 pub struct CloneParams {
     pub fetch: FetchGitlabOptions,
     pub dst: Option<String>,
@@ -229,6 +230,7 @@ pub struct CloneParams {
     pub exclude_archived: bool,
 }
 
+#[allow(clippy::too_many_lines)]
 #[tokio::main]
 pub async fn clone(p: CloneParams) -> Result<()> {
     let fetch_gl = gitlab::Client::new(

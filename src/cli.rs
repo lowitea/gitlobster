@@ -5,6 +5,7 @@ use crate::cloner::{
 };
 use anyhow::{bail, Result};
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Parser)]
 #[command(author, version, about)]
 /// A tool for cloning all available repositories in a GitLab instance

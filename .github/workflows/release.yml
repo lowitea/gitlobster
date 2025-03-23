@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: integration-tests
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Build and push Docker image
         uses: docker/build-push-action@v1
         with:
@@ -50,13 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: integration-tests
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
-          toolchain: stable
-      - uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --locked
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          toolchain: "1.82"
+      - run: cargo publish --locked --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
