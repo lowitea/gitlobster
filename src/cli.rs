@@ -10,7 +10,7 @@ use anyhow::{bail, Result};
 #[command(author, version, about)]
 /// A tool for cloning all available repositories in a GitLab instance
 struct Cli {
-    /// The GitLab instance URL for fetch repositories (example: <https://gitlab.local>)
+    /// The GitLab instance URL for fetching repositories (example: <https://gitlab.local>)
     #[arg(
         long,
         value_parser,
@@ -19,7 +19,7 @@ struct Cli {
     )]
     fu: String,
 
-    /// Your personal GitLab token for fetch repositories
+    /// Your personal GitLab token for fetching repositories
     #[arg(
         long,
         value_parser,
@@ -46,7 +46,7 @@ struct Cli {
     )]
     bt: Option<String>,
 
-    /// A target created group on backup GitLab for push repositories
+    /// A target created group on backup GitLab for pushing repositories.
     #[arg(
         long,
         value_parser,
@@ -63,7 +63,7 @@ struct Cli {
     #[arg(short = 'x', long, env = "GTLBSTR_EXCLUDE", value_name = "PATTERN")]
     exclude: Option<Vec<String>>,
 
-    /// A destination local folder for save downloaded repositories
+    /// A destination local folder for saving downloaded repositories
     #[arg(
         long,
         short,

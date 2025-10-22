@@ -140,9 +140,9 @@ Options:
       --fu <FETCH URL>
           The GitLab instance URL for fetch repositories (example: https://gitlab.local/) [env: GTLBSTR_FETCH_URL=]
       --ft <FETCH TOKEN>
-          Your personal GitLab token for fetch repositories [env: GTLBSTR_FETCH_TOKEN=]
+          Your personal GitLab token for fetching repositories [env: GTLBSTR_FETCH_TOKEN=]
       --bu <BACKUP URL>
-          The GitLab instance URL for backup repositories (example: https://backup-gitlab.local/) [env: GTLBSTR_BACKUP_URL=]
+          The GitLab instance URL for backup repositories (example: <https://backup-gitlab.local>) [env: GTLBSTR_BACKUP_URL=]
       --bt <BACKUP TOKEN>
           Your personal GitLab token for backup repositories [env: GTLBSTR_BACKUP_TOKEN=]
       --bg <BACKUP GROUP>
