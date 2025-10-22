@@ -145,8 +145,8 @@ Options:
           The GitLab instance URL for backup repositories (example: <https://backup-gitlab.local>) [env: GTLBSTR_BACKUP_URL=]
       --bt <BACKUP TOKEN>
           Your personal GitLab token for backup repositories [env: GTLBSTR_BACKUP_TOKEN=]
-      --bg <BACKUP GROUP>
-          A target created group on backup GitLab for push repositories [env: GTLBSTR_BACKUP_GROUP=]
+      --bg <BACKUP GROUP ID>
+          A target created group on backup GitLab for pushing repositories. Besides the numeric ID, the encoded path can also be used, see https://docs.gitlab.com/api/rest/#encoding [env: GTLBSTR_BACKUP_GROUP=]
   -i, --include <PATTERN>
           Include regexp patterns (cannot be used together with --exclude flag, may be repeated) [env: GTLBSTR_INCLUDE=]
   -x, --exclude <PATTERN>
@@ -167,8 +167,8 @@ Options:
           Download projects explicitly owned by user [env: GTLBSTR_ONLY_OWNED=]
       --only-membership
           Download only user's projects [env: GTLBSTR_ONLY_MEMBERSHIP=]
-      --group <GROUP>
-          Download projects only in group [env: GTLBSTR_GROUP=]
+      --group <GROUP ID>
+          Download projects only in group. Besides the numeric ID, the encoded path can also be used, see https://docs.gitlab.com/api/rest/#encoding [env: GTLBSTR_GROUP=]
       --download-ssh
           Enable download by ssh instead of http. An authorized ssh key is required [env: GTLBSTR_DOWNLOAD_SSH=]
       --upload-ssh

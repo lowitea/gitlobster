@@ -46,12 +46,12 @@ struct Cli {
     )]
     bt: Option<String>,
 
-    /// A target created group on backup GitLab for pushing repositories.
+    /// A target created group on backup GitLab for pushing repositories. Besides the numeric ID, the encoded path can also be used, see https://docs.gitlab.com/api/rest/#encoding
     #[arg(
         long,
         value_parser,
         env = "GTLBSTR_BACKUP_GROUP",
-        value_name = "BACKUP GROUP"
+        value_name = "BACKUP GROUP ID"
     )]
     bg: Option<String>,
 
@@ -112,8 +112,8 @@ struct Cli {
     #[arg(long, env = "GTLBSTR_ONLY_MEMBERSHIP")]
     only_membership: bool,
 
-    /// Download projects only in group
-    #[arg(long, env = "GTLBSTR_GROUP")]
+    /// Download projects only in group. Besides the numeric ID, the encoded path can also be used, see https://docs.gitlab.com/api/rest/#encoding
+    #[arg(long, value_name = "GROUP ID", env = "GTLBSTR_GROUP")]
     group: Option<String>,
 
     /// Enable download by ssh instead of http. An authorized ssh key is required
